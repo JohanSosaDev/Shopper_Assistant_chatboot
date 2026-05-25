@@ -343,3 +343,19 @@ Complete chronological record of all user inputs, AI responses, and stage decisi
 **Context**: Sesión terminada por hoy. Próxima sesión: usuario confirma antes de proceder con Unit 2 FD.
 
 ---
+
+## Oct8ne Blocker Resolution — Sesión 2026-05-25
+**Timestamp**: 2026-05-25T14:00:00Z
+**User Input**: "Hola Claude. Volvemos al workflow AI-DLC de Hermes. Status del viernes 2026-05-22: - Inception completo + Unit 1 design + Unit 2 design todos terminados y commiteados a main (commit c3e82f8) - Pausados antes de continuar Unit 3 FD por un blocker: Tenía pendiente verificar si Oct8ne sigue activo en Patprimo o no. El detalle del blocker y opciones de mitigación están en: ai-dlc/aidlc-docs/blockers/oct8ne-validation-pending.md Hoy ya tengo la respuesta: No esta activo solo se uso para envio de mensajes por batch, como avisarle a los clientes que habia un retraso, creo que no lo han quitado solo lo usan para enviar mensaje por medio dep lantillas exceles, no ha integracion directa, se usa a punta de excel Por favor lee el blocker y mi memoria de proyecto, y dime qué cambios hay que aplicar al plan de Unit 3 FD antes de continuar."
+**AI Response**: Leí blocker doc + memoria proyecto + plan Unit 3 FD + stories.md + prd.md. Diagnóstico: caso encaja en Escenario 2 del blocker (Oct8ne OUT como chat activo) con nuance: sigue contratado para envío batch outbound vía Excel manual — sin integración programática, sin widget en vivo. Presenté análisis estructurado al usuario: Q2/Q5 obsoletas; Q1/Q3/Q4/Q6 OK; stories E3-S3 + E4-S2 + MH-4/MH-9 a refactorizar; PRD §3/§10/§12/§11/§13/§4.5 a refactorizar; lado positivo del business case. Pregunté 4 opciones de alcance del refactor.
+**Context**: Retomando workflow tras pausa del 2026-05-22 con info nueva del usuario.
+
+---
+
+## Oct8ne Blocker Resolution — Decisión de alcance
+**Timestamp**: 2026-05-25T14:05:00Z
+**User Input**: AskUserQuestion respuesta = "Actualizar plan Unit 3 FD (Recommended)" — reescribir Q2/Q5 del plan, marcar blocker resuelto, actualizar memoria. Stories y PRD diferidos.
+**AI Response**: Aplicado lo siguiente: (1) `unit3-handoff-convivencia-functional-design-plan.md` — header con nota de validación; scope renombrado "Handoff & Despliegue Gradual"; M8 renombrado "Gradual Rollout"; story E3-S3 retitulada; story E4-S2 retitulada; Q2 reformulada como "Target del handoff humano" con 4 opciones nuevas (A stub+email rec / B WhatsApp / C widget propio / D Service Cloud); Q5 reformulada como "Mecanismo de despliegue gradual" con 4 opciones nuevas (A kill switch / B dark launch / C combinado rec / D manual); checklist actualizado (R-AB-* → R-ROLL-*, AB entities → Rollout entities); nuevo bloque "Cambios derivados" con tabla y pendientes diferidos. (2) `aidlc-docs/blockers/oct8ne-validation-pending.md` — header retitulado "✅ RESUELTO", cita textual del usuario, interpretación operativa, aplicación de resolución. (3) Memoria `blocker_oct8ne_status.md` reescrita como "resolved" con cambios aplicados, pendientes diferidos y status del workflow. (4) `MEMORY.md` index actualizado. Q1/Q3/Q4/Q6 del plan SIN cambios. Pendiente: usuario responde las 6 preguntas del plan para entrar a Part 2 (generación de los 3 artefactos FD).
+**Context**: Blocker resuelto. Unit 3 FD plan desbloqueado. Pacing memory respetada — esperando respuestas del usuario antes de generar artefactos.
+
+---

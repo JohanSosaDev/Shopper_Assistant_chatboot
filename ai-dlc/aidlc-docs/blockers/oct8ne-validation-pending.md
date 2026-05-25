@@ -1,7 +1,26 @@
-# 🚨 Blocker — Validación pendiente del estado de Oct8ne en Patprimo
+# ✅ RESUELTO — Validación del estado de Oct8ne en Patprimo
 
 **Fecha registrada**: 2026-05-22 (viernes)
-**Bloquea**: Unit 3 — Functional Design (último Unit del per-unit loop)
+**Fecha resuelta**: 2026-05-25 (lunes)
+**Resolución**: **Escenario 2 confirmado — Oct8ne OUT como chat activo**
+
+## Resolución (palabras del usuario, 2026-05-25)
+> "No esta activo solo se uso para envio de mensajes por batch, como avisarle a los clientes que habia un retraso, creo que no lo han quitado solo lo usan para enviar mensaje por medio de plantillas exceles, no hay integracion directa, se usa a punta de excel"
+
+**Interpretación operativa**:
+- Oct8ne NO está activo como chat customer-facing (sin widget en vivo, sin árbol rule-based atendiendo).
+- Sigue contratado/instalado pero su uso actual es exclusivamente **envío batch outbound** (avisos a clientes) mediante **plantillas Excel manuales** — no hay integración programática.
+- Para fines de Hermes: Oct8ne **no existe como sistema con el que integrarse, hacer A/B o handoff**.
+
+## Aplicación de la resolución
+- **Unit 3 FD plan**: Q2 reformulada (target handoff) + Q5 reformulada (despliegue gradual). Ver `aidlc-docs/construction/plans/unit3-handoff-convivencia-functional-design-plan.md` § "Cambios derivados".
+- **Pendientes diferidos (no bloquean Unit 3 FD)**: refactor de `stories.md` (E3-S3, E4-S2, MH-4, MH-9), `prd.md` (§3, §10, §12, §11, §13, §4.5), `unit-of-work.md` y `component-methods.md`. Se ejecutan en sesión separada antes de presentar al CTO.
+
+---
+
+## Histórico (antes de resolver)
+
+**Bloqueaba**: Unit 3 — Functional Design (último Unit del per-unit loop)
 **Para resolver**: Lunes 2026-05-25
 **Responsable**: Johan Sosa (verificar con equipo PASH)
 
