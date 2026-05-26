@@ -43,7 +43,7 @@ C) **LLM call adicional al Bedrock** — pedir al modelo "rate sentiment -1 to 1
 D) **Hybrid keywords + LLM solo si keywords ambiguos** — pragmatic; primer pase keywords, escala a LLM si necesario.
 X) Otro
 
-[Answer]: 
+[Answer]: A — Heurística keywords ES Col + intensificadores. Razón: Demo Day en 15 días; libs ES (B) tienen cobertura pobre; LLM extra (C) suma latencia/costo a pipeline que ya tiene 1 call Bedrock por turn; D es complejidad innecesaria para MVP. Vocabulario Col es acotado; iterar tras piloto.
 
 ---
 
@@ -61,7 +61,7 @@ X) Otro
 
 **Recomendación tentativa**: **A (stub MVP + email offline)**. Razones: (1) garantiza Demo Day el 2026-06-09 sin dependencia externa; (2) demuestra el mecanismo completo de Hermes (detección, paquete, entrega) que es lo defendible ante el CTO; (3) WhatsApp/Service Cloud/widget propio se evalúan en Fase 2 con datos del piloto; (4) ya no hay urgencia "no degradar Oct8ne" porque Oct8ne no existe como chat. Combinable con un fallback de teléfono manual si el cliente prefiere.
 
-[Answer]: 
+[Answer]: A — Stub MVP + email offline. Cliente recibe mensaje "te conectamos por correo en X horas hábiles", deja email/WhatsApp; sistema envía email a `cx@patprimo.com` con paquete de contexto pre-formateado; persiste en tabla `handoff_ticket`. Fase 2: WhatsApp Business y/o Service Cloud según datos del piloto.
 
 ---
 
@@ -74,7 +74,7 @@ B) **Materialized views actualizadas por trigger** — vistas pre-computadas par
 C) **Snapshot tables actualizadas por job periódico** — tabla `kpi_snapshots` poblada cada 5 min con valores agregados; dashboard lee de ahí. Más resiliente pero datos no real-time.
 X) Otro
 
-[Answer]: 
+[Answer]: A — Queries directas a `turn_log_audit` con índices ya planeados en Unit 1 §5 `(timestamp, conversation_id)`. MVP volume <1000 conv/día estimado → sub-segundo con índices apropiados. B/C son over-engineering para MVP; migrar si escala lo exige en Fase 2.
 
 ---
 
@@ -88,7 +88,7 @@ C) **Slack + email (via SMTP)** — agregar SMTP config (sendmail or service); 2
 D) **PagerDuty / formal alerting** — Fase 2 territory.
 X) Otro
 
-[Answer]: 
+[Answer]: B — Slack webhook único. Env var `SLACK_WEBHOOK_URL` apunta a Slack incoming webhook del canal `#hermes-alerts`. Cada alerta lleva texto resumen + link al dashboard de drill-down. PASH ya usa Slack internamente.
 
 ---
 
@@ -106,7 +106,7 @@ X) Otro
 
 **Recomendación tentativa**: **C (kill switch + dark launch)**. Razones: (1) el PRD §13 línea 1504 ya promete "soft launch al 5% sin incidente crítico 48h" como gate — necesita un mecanismo de %; (2) kill switch absoluto como red de seguridad es defendible ante CTO; (3) +1.5 días es asumible dentro del tiempo restante para Demo Day; (4) reutiliza la BM UI de Unit 2, no requiere infra extra.
 
-[Answer]: 
+[Answer]: C — Kill switch + dark launch combinados. Tabla `system_config` con campos `hermes_enabled` (bool, override absoluto) y `hermes_traffic_percentage` (0–100). Hash determinístico: `hash(customerIdHash || sessionId) % 100 < N`. Toggle desde BM UI de Unit 2, sin redeploy. Ramp 5% → 25% → 100% según KPIs del gate de Demo Day.
 
 ---
 
@@ -119,7 +119,7 @@ B) **Expanded keyword bag + similarity** — lista de ~30 frases tipo + fuzzy ma
 C) **Detección en classify_intent** — el LLM ya clasifica intent en Unit 1 pipeline; agregar `intent="explicit_handoff_request"` a las opciones. Más natural.
 X) Otro
 
-[Answer]: 
+[Answer]: C — Extender `classify_intent` de Unit 1 con label `explicit_handoff_request`. Coste marginal cero (mismo LLM call). LLM maneja variaciones nativamente ("ya no aguanto este bot", "pásame con alguien que sepa", etc.) sin mantenimiento de regex/lista.
 
 ---
 
@@ -129,14 +129,14 @@ X) Otro
 
 ## Generation Checklist (Part 2 — tras respuestas)
 
-- [ ] Validar respuestas Q1–Q6; resolver ambigüedades
-- [ ] Generar `business-logic-model.md` — handoff workflow + gradual rollout + dashboard queries + alerting workflow
-- [ ] Generar `business-rules.md` — R-HO-* (handoff), R-ROLL-* (rollout/kill switch), R-DASH-* (dashboards), R-ALERT-* (alerts), R-SENT-* (sentiment)
-- [ ] Generar `domain-entities.md` — Handoff, HandoffPackage, HandoffTicket, RolloutConfig, KillSwitchState, AlertRule, KpiSnapshot, EscalationView
-- [ ] Verificar consistencia con AC Gherkin de las 8 stories (E3-S3 y E4-S2 requieren refactor de stories.md en sesión aparte)
-- [ ] Security compliance summary
-- [ ] Actualizar `aidlc-state.md`
-- [ ] Presentar completion message (2-option)
+- [x] Validar respuestas Q1–Q6; resolver ambigüedades — 6/6 aplicadas (A/A/A/B/C/C)
+- [x] Generar `business-logic-model.md` — handoff workflow + gradual rollout + dashboard queries + alerting workflow
+- [x] Generar `business-rules.md` — R-SENT-* / R-HO-* / R-HOD-* / R-ROLL-* / R-DASH-* / R-ALERT-*
+- [x] Generar `domain-entities.md` — HandoffTicket, HandoffPackage VO, SystemConfig, SystemConfigAudit, AlertRule, AlertEvent + extensión TurnLogAudit
+- [x] Verificar consistencia con AC Gherkin de las 8 stories — todos los AC mapeados; E3-S3 y E4-S2 marcados como pendientes de refactor en stories.md (diferido, no bloquea)
+- [x] Security compliance summary — incluido en business-rules §8 (mapping SECURITY-1..15) + PBT compliance
+- [x] Actualizar `aidlc-state.md`
+- [x] Presentar completion message (2-option)
 
 ---
 

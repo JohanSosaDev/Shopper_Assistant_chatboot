@@ -359,3 +359,128 @@ Complete chronological record of all user inputs, AI responses, and stage decisi
 **Context**: Blocker resuelto. Unit 3 FD plan desbloqueado. Pacing memory respetada — esperando respuestas del usuario antes de generar artefactos.
 
 ---
+
+## Unit 3 Functional Design — Commit del estado intermedio
+**Timestamp**: 2026-05-25T14:10:00Z
+**User Input**: AskUserQuestion respuesta = "Commit del estado actual primero"
+**AI Response**: Staged 3 archivos AI-DLC (plan reformulado + blocker resuelto + audit appended) excluyendo `.obsidian/workspace.json`. Commit `66f5dc0` en `main`: "Estacion 5 - Unit 3 FD: blocker Oct8ne resuelto + plan reformulado (Q2 target handoff, Q5 despliegue gradual)". 1 commit ahead of origin/main (sin push automático per pacing memory).
+**Context**: Punto de control limpio en main antes de entrar a Part 2.
+
+---
+
+## Unit 3 Functional Design — Recomendaciones presentadas
+**Timestamp**: 2026-05-25T14:15:00Z
+**User Input**: "las recomendaciones?"
+**AI Response**: Presentada tabla con 6 recomendaciones tentativas y razón corta cada una: Q1=A heurística keywords ES Col, Q2=A stub+email offline, Q3=A queries directas a turn_log_audit, Q4=B Slack webhook único, Q5=C kill switch + dark launch, Q6=C extender classify_intent. Resumen de impacto: ~2 días adicionales totales; Demo Day garantizado sin dependencias externas. Pregunté si aplicar las 6 y entrar a Part 2 o ajustar alguna.
+**Context**: Aclaración solicitada por usuario antes de aplicar respuestas.
+
+---
+
+## Unit 3 Functional Design — Part 1 (respuestas aplicadas) + Part 2 (generación) ejecutadas
+**Timestamp**: 2026-05-25T14:25:00Z
+**User Input**: "Aplicalas"
+**AI Response**: Aplicado lo siguiente:
+- **Part 1 (responses)**: Llenados los 6 `[Answer]:` del plan con A/A/A/B/C/C + justificación corta para cada uno.
+- **Part 2 (generation)**: Creados 3 artefactos en `aidlc-docs/construction/unit3-handoff-convivencia/functional-design/`:
+  - `business-logic-model.md` (~340 líneas): big picture mermaid + Workflow A (trigger detection) + Workflow B (package construction) + Workflow C (delivery stub+email con sequence) + Workflow D (rollout gate) + Workflow E (dashboard queries) + Workflow F (alerting) + integración con Units 1/2 + sequence diagram end-to-end + out-of-scope.
+  - `business-rules.md` (~280 líneas): R-SENT-1..5 (sentiment), R-HO-1..12 (triggers + paquete), R-HOD-1..8 (delivery), R-ROLL-1..9 (rollout), R-DASH-1..7 (dashboards), R-ALERT-1..8 (alerts), Security & PBT compliance summary.
+  - `domain-entities.md` (~280 líneas): ER diagram + HandoffTicket + HandoffPackage VO (audience email vs audit) + SystemConfig + SystemConfigAudit + AlertRule + AlertEvent + extensión turn_log_audit (5 columnas nuevas) + reference data seeds (handoff_category_map, sentiment_lexicon_es_co) + migrations 005-010 order + out-of-scope.
+- **Plan checklist**: 7/7 items marcados `[x]`.
+- **`aidlc-state.md`**: Unit 3 FD ✅ marcado; "Current Status" actualizado a "Unit 3 NFR-R pendiente esperando aprobación explícita".
+**Context**: Standardized 2-option completion message a presentar al usuario para Unit 3 FD (per AI-DLC rule).
+
+---
+
+## Unit 3 Functional Design — Approval Prompt
+**Timestamp**: 2026-05-25T14:30:00Z
+**Approval Prompt**: Solicitando aprobación explícita de Unit 3 Functional Design (3 artefactos) antes de proceder a Unit 3 NFR Requirements.
+**Context**: Step 8 GATE — Do not proceed until explicit approval (per pacing memory + AI-DLC rule).
+
+---
+
+## Unit 3 Functional Design — Approval Received
+**Timestamp**: 2026-05-25T14:35:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Unit 3 FD aprobado. Procediendo a Unit 3 NFR Requirements (Part 1 — planning). Creado `aidlc-docs/construction/plans/unit3-handoff-convivencia-nfr-requirements-plan.md` con 5 preguntas embebidas + recomendaciones tentativas para cada una (Q1=A in-process timer, Q2=A best-effort+alerta, Q3=C retry+persist, Q4=A operator+admin only, Q5=A 3 funciones core PBT). Pendiente: respuestas del usuario antes de generar `nfr-requirements.md` + `tech-stack-decisions.md`.
+**Context**: Per-Unit Loop advancing. Unit 3 FD ✅ → NFR-R (in progress, Part 1 done).
+
+---
+
+## Unit 3 NFR Requirements — Part 1 (responses) + Part 2 (generation) ejecutadas
+**Timestamp**: 2026-05-25T14:45:00Z
+**User Input**: "Aplicalo"
+**AI Response**: Aplicado lo siguiente:
+- **Part 1 (responses)**: Llenados los 5 `[Answer]:` del plan con A/A/C/A/A + justificación corta + detalles operativos (node-cron expression, advisory lock, withRetry config, RBAC matrix, PBT properties enumerados).
+- **Part 2 (generation)**: Creados 2 artefactos en `aidlc-docs/construction/unit3-handoff-convivencia/nfr-requirements/`:
+  - `nfr-requirements.md` (10 secciones): Performance (latency targets + throughput + optimization), Scalability (volúmenes tablas U3), Availability (failure modes + graceful degradation), Security delta vs U1/U2 (mapping SECURITY-01..15 con énfasis en SECURITY-02 PII handling + SECURITY-14 alerting + SECURITY-13 audit trail), PII handling R-HO-10, RBAC table per-endpoint Q4=A, Audit trail R-ROLL-6, Threat model U3, Reliability (idempotencia + TX atomicity + advisory lock), Maintainability (PBT scope 3 funciones con propiedades + tests a generar en Code Gen), Observability (Unit 3 ES el read-path observability), NFR-to-Story traceability 8 stories incluyendo nota sobre E4-S2 reformulada, Out-of-scope, Security Compliance Summary.
+  - `tech-stack-decisions.md` (7 secciones): Stack heredado U1+U2 tabulado, Adiciones nuevas (nodemailer 6.x + mailhog docker, node-cron 3.x in-process con advisory lock, custom Slack adapter ~30 LoC sobre undici, sentiment scorer custom sin lib externa, rollout gate sha256 built-in), Open Decisions status (OD-7 ✅ cerrada acá), Migration strategy con 5 SQL completos forward-only (0007-system_config, 0008-system_config_audit, 0009-handoff_ticket, 0010-alerts builtin seed, 0011-turn_log_audit extend), Decision log TD-U3-1..13, Deps npm pinneadas, Security Compliance Summary.
+- **Plan checklist**: 7/7 items marcados `[x]`.
+- **`aidlc-state.md`**: Unit 3 NFR-R ✅ marcado; "Current Status" actualizado a "Unit 3 NFR-D pendiente esperando aprobación explícita". OD-7 cerrada en TD-U3-5/6.
+**Context**: Standardized 2-option completion message a presentar al usuario para Unit 3 NFR-R (per AI-DLC rule).
+
+---
+
+## Unit 3 NFR Requirements — Approval Prompt
+**Timestamp**: 2026-05-25T14:50:00Z
+**Approval Prompt**: Solicitando aprobación explícita de Unit 3 NFR Requirements (2 artefactos) antes de proceder a Unit 3 NFR Design.
+**Context**: Step 8 GATE — Do not proceed until explicit approval (per pacing memory + AI-DLC rule).
+
+---
+
+## Unit 3 NFR Requirements — Approval Received
+**Timestamp**: 2026-05-25T14:55:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Unit 3 NFR-R aprobado. Procediendo a Unit 3 NFR Design (Part 1 — planning). Creado `aidlc-docs/construction/plans/unit3-handoff-convivencia-nfr-design-plan.md` con 5 preguntas embebidas + recomendaciones tentativas: Q1=A (retry 3 + breaker 5/60s para SMTP, consistente con Bedrock U1), Q2=A (cache custom in-memory ~20 LoC, sin lib externa), Q3=A (sync read del lexicon al boot, fail-fast), Q4=A (single advisory lock + eval secuencial de reglas), Q5=A (email rendering con template literals inline, sin EJS para emails). Pendiente: respuestas del usuario antes de generar `nfr-design-patterns.md` + `logical-components.md`.
+**Context**: Per-Unit Loop advancing. Unit 3 FD ✅ + NFR-R ✅ → NFR-D (Part 1 done).
+
+---
+
+## Unit 3 NFR Design — Part 1 (responses) + Part 2 (generation) ejecutadas
+**Timestamp**: 2026-05-25T15:05:00Z
+**User Input**: "Aplica"
+**AI Response**: Aplicado lo siguiente:
+- **Part 1 (responses)**: Llenados los 5 `[Answer]:` con A/A/A/A/A + detalles operativos (exact retry/breaker config, advisory lock id, Zod schema para lexicon, template literal subjects con priority tag).
+- **Part 2 (generation)**: Creados 2 artefactos en `aidlc-docs/construction/unit3-handoff-convivencia/nfr-design/`:
+  - `nfr-design-patterns.md` (~480 líneas, 11 secciones): SMTP resilience con código completo (SmtpAdapter + composition root wiring + failure mapping table), Slack adapter undici-based con código completo (sin breaker para no silenciar críticas), AlertEvaluator pattern con código de node-cron lifecycle + advisory lock + sequential eval con throttling persistido, RolloutGate cache con TtlCache genérico ~20 LoC + SystemConfigRepo con cache + audit insert TX, Sentiment lexicon loading sync + Zod schema + SentimentScorer impl + PBT tests example, Email rendering con escapeHtml + 3 funciones puras (HTML, text, subject), RBAC requireRole decorator + usage U3, Error mapping (6 nuevos error classes: SmtpDelivery/SlackWebhook/HandoffPackageInvalid/HandoffAlreadyInProgress/RolloutDisabled/AlertRuleValidation) con mapping table HTTP, Logging extension con 5 nuevos campos turn_log_audit + 8 nuevos log events, Out-of-scope, Security Compliance Summary.
+  - `logical-components.md` (~370 líneas, 9 secciones): Topology delta con mermaid (mailhog nuevo, sin cambios postgres/app), 10 nuevos services + 3 adapters + 7 nuevos plugins + 6 nuevos repos + 6 nuevos controllers + 1 job nuevo (alert-evaluator cron), 8 nuevas EJS views + 2 widget cliente extensions + 2 reference data files, Composition root wiring completo con código, Pipeline /chat extendido con compute_sentiment_score (step 7) + evaluate_handoff_trigger (step 8) pre-generate_response, Tests específicos Code Gen (15 archivos test enumerados), package.json + docker-compose deltas (mailhog service nuevo), Out-of-scope, Security Compliance.
+- **Plan checklist**: 7/7 items marcados `[x]`.
+- **`aidlc-state.md`**: Unit 3 NFR-D ✅ marcado; Current Status actualizado a "Unit 3 ID pendiente esperando aprobación explícita".
+**Context**: Standardized 2-option completion message a presentar al usuario para Unit 3 NFR-D (per AI-DLC rule).
+
+---
+
+## Unit 3 NFR Design — Approval Prompt
+**Timestamp**: 2026-05-25T15:10:00Z
+**Approval Prompt**: Solicitando aprobación explícita de Unit 3 NFR Design (2 artefactos) antes de proceder a Unit 3 Infrastructure Design.
+**Context**: Step 8 GATE — Do not proceed until explicit approval (per pacing memory + AI-DLC rule).
+
+---
+
+## Unit 3 NFR Design — Approval Received
+**Timestamp**: 2026-05-25T15:15:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Unit 3 NFR-D aprobado. Procediendo a Unit 3 Infrastructure Design (Part 1 — planning). Creado `aidlc-docs/construction/plans/unit3-handoff-convivencia-infrastructure-design-plan.md` con 4 preguntas embebidas + recomendaciones tentativas: Q1=A (mailhog siempre en docker-compose.yml; migración trivial a SMTP corporativo en Fase 2), Q2=A (SLACK_WEBHOOK_URL optional con graceful degradation; consistente con NFR-D §2.1), Q3=A (extender script `npm run backup` con 3 tablas U3 — mismo runbook que U2), Q4=A (Demo Day conservadora: día -3 traffic=0%, día -1 traffic=5%, día 0 traffic=25%, ramp post-demo según KPIs). Pendiente: respuestas del usuario antes de generar `infrastructure-design.md` + `deployment-architecture.md`.
+**Context**: Per-Unit Loop advancing. Unit 3 FD ✅ + NFR-R ✅ + NFR-D ✅ → ID (Part 1 done). Último stage de diseño antes de Code Generation.
+
+---
+
+## Unit 3 Infrastructure Design — Part 1 (responses) + Part 2 (generation) ejecutadas
+**Timestamp**: 2026-05-25T15:25:00Z
+**User Input**: "Continuemos"
+**AI Response**: Aplicado lo siguiente:
+- **Part 1 (responses)**: Llenados los 4 `[Answer]:` con A/A/A/A + detalles operativos (mailhog en compose con Fase 2 migration path; Zod env schema con `SLACK_WEBHOOK_URL.optional()`; backup runbook con `--label` flag; cronograma Demo Day día -3/-1/0/+1..+7 con thresholds).
+- **Part 2 (generation)**: Creados 2 artefactos en `aidlc-docs/construction/unit3-handoff-convivencia/infrastructure-design/`:
+  - `infrastructure-design.md` (14 secciones): Deployment target, Compute (3 containers: hermes+postgres+**mailhog nuevo**), Storage delta (5 tablas + extensión turn_log_audit), Env vars delta (6 nuevas U3 con Zod schema), Migration sequence consolidada 0001-0011, mailhog service en docker-compose con sintaxis YAML completa + Fase 2 migration path, AlertEvaluator job lifecycle (registro composition root + cron + shutdown graceful), Backup strategy extension con 6 tablas críticas listadas + Demo Day runbook commands, Networking, Monitoring delta, Resource sizing (~2.1 cpu / 2 GiB total), npm scripts (sin nuevos), Out-of-scope, Security Compliance.
+  - `deployment-architecture.md` (10 secciones): Deployment diagram mermaid con mailhog + Slack, Prerequisites delta, **Quickstart 9 pasos end-to-end U1+U2+U3** con comandos curl exactos para verificar rollout/handoff/dashboard, **env vars matrix consolidada (28 variables)** tabulada por unit, `.env.example` consolidado completo (todos los U1+U2+U3 secrets), **Demo Day runbook con cronograma día -3 a día +7 + comandos curl PATCH /admin/rollout/* + go/no-go gates por cada salto**, Rollback procedures (kill switch <60s + traffic decrease + migration restore + código git checkout), Troubleshooting de 5 escenarios (email no llega, Slack falla, AlertEvaluator stuck con advisory lock unlock manual, cache stale, handoff duplicado), Out-of-scope, **Demo Day operational notes** con orden sugerido de demostración + plan B si algo falla mid-show.
+- **Plan checklist**: 7/7 items marcados `[x]`.
+- **`aidlc-state.md`**: Unit 3 ID ✅ marcado; "Current Status" actualizado a "Unit 3 design 100% complete; próxima decisión = Code Generation"; **hito MVP design 100% completo registrado**.
+**Context**: 🎯 Hito alcanzado — todo el diseño del MVP (Units 1+2+3 × 4 stages cada uno) está completo. Standardized 2-option completion message a presentar.
+
+---
+
+## Unit 3 Infrastructure Design — Approval Prompt
+**Timestamp**: 2026-05-25T15:30:00Z
+**Approval Prompt**: Solicitando aprobación explícita de Unit 3 Infrastructure Design (2 artefactos) antes de proceder a Unit 3 Code Generation (último stage del Per-Unit Loop). Decisión clave: ¿continuar a CG o diferir como U1/U2?
+**Context**: Step 8 GATE — Do not proceed until explicit approval (per pacing memory + AI-DLC rule). MVP design 100% complete.
+
+---
