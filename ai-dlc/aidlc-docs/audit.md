@@ -484,3 +484,55 @@ Complete chronological record of all user inputs, AI responses, and stage decisi
 **Context**: Step 8 GATE — Do not proceed until explicit approval (per pacing memory + AI-DLC rule). MVP design 100% complete.
 
 ---
+
+## Unit 3 ID — Approval Received via commit-first decision
+**Timestamp**: 2026-05-25T15:35:00Z
+**User Input**: "Commit primero, después decido"
+**AI Response**: Staged 15 archivos (3 modified U2 plan + state + audit; 12 new Unit 3 design artifacts + plans). Commit `1c5f65f` en main: "Estacion 5 - Unit 3 design completo (FD + NFR-R + NFR-D + ID): hito 100% del diseno del MVP". 15 files changed, 3729 insertions, 21 deletions. Working tree limpio (excepto .obsidian/workspace.json no tocado).
+**Context**: Hito del workflow — Unit 3 design 100% committed. Próxima decisión pendiente.
+
+---
+
+## User chose: Push to origin/main
+**Timestamp**: 2026-05-25T15:40:00Z
+**User Input**: "Push a origin/main" (AskUserQuestion response)
+**AI Response**: Ejecutado `git push origin main`. Result: `c3e82f8..1c5f65f main -> main`. 2 commits sincronizados a remote (66f5dc0 Oct8ne resolution + 1c5f65f Unit 3 design 100%). Branch up-to-date con origin/main.
+**Context**: Diseño Unit 3 ahora visible en GitHub. Workflow continúa.
+
+---
+
+## User chose: Build and Test (sin código)
+**Timestamp**: 2026-05-25T15:45:00Z
+**User Input**: "Build and Test (sin código) (Recommended)" (AskUserQuestion response)
+**AI Response**: Iniciando Build and Test stage (último de CONSTRUCTION). Diferir Code Generation alineado con U1/U2 paused/diferido. Generar 5 instruction docs sin generar código.
+**Context**: Construcción documental final del workflow AI-DLC.
+
+---
+
+## Build and Test stage — Generación ejecutada
+**Timestamp**: 2026-05-25T16:00:00Z
+**AI Response**: Generados 5 instruction docs en `aidlc-docs/construction/build-and-test/`:
+- `build-instructions.md` (8 secciones): Prerequisites (Docker, Node 20, AWS+SFCC creds), Build steps (npm install + docker compose up + 11 migraciones + seed + create-bm), Build artifacts esperados (estructura `hermes/` con todos los layers), 14 npm scripts consolidados, Build verification checklist 10 items, Build troubleshooting 6 escenarios, Build performance metrics, Next steps.
+- `unit-test-instructions.md` (12 secciones): Test stack (Vitest + Supertest + fast-check), Run commands, Coverage target 70% lines, Test file organization tree, Mock strategy por external service, Tests específicos por Unit (U1 + U2 + U3 con todos los test files enumerados), PBT conventions con arbitraries reusables, Fixtures organization, CI considerations (OD-8 cerrada — Fase 2), Unit test verification checklist, Out-of-scope MVP.
+- `integration-test-instructions.md` (11 secciones): Filosofía mocks vs real, Setup (vitest.integration.config + setup.ts con beforeAll docker compose + beforeEach truncate + mailhog helpers), Run commands, Test scenarios por Unit (5 U1 + 5 U2 + 16 U3 enumerados con scenarios específicos), Test data utilities (seed helpers), Mock strategies (Postgres+mailhog real; Bedrock+SFCC+Slack mock), Anti-patterns a evitar, Verification checklist, Out-of-scope, Troubleshooting 5 escenarios.
+- `performance-test-instructions.md` (11 secciones): Targets heredados de NFR-R (9 SLOs tabulados), Tool autocannon + Vitest bench, Run commands, 7 scenarios HTTP + 3 microbench, Seed perf data, Interpretación resultados (por qué importa cada SLO + qué hacer si no cumple), Verification checklist, Out-of-scope MVP, Troubleshooting.
+- `build-and-test-summary.md` (10 secciones): Documento map, Test types matrix, **CI/CD strategy con OD-8 decisión cerrada** (MVP local-only / Fase 2 GitHub Actions con workflow YAML completo + gates), **Demo Day readiness checklist completo** (build, unit, integration, perf, backup, pre-demo, durante demo, post-demo), Cubierto vs NO cubierto por tests, Test gap analysis MVP vs Fase 2, Out-of-scope explicit, Estado final stage, Next stage (Operations placeholder), Security Compliance.
+- `aidlc-state.md`: Build and Test ✅ marcado; Current Status actualizado a "🏁 Hito final workflow AI-DLC docs — TODO el documentación MVP completa".
+**Context**: Standardized completion message a presentar — workflow AI-DLC completo (modulo Operations placeholder).
+
+---
+
+## Build and Test — Approval Prompt
+**Timestamp**: 2026-05-25T16:05:00Z
+**Approval Prompt**: "**Build and test instructions complete. Ready to proceed to Operations stage?**" (per AI-DLC rule build-and-test.md Step 5).
+**Context**: Operations stage es placeholder en MVP per CLAUDE.md — sin actividades operacionales scoped. Aprobar este stage cierra el workflow AI-DLC.
+
+---
+
+## Build and Test — Approval Received → Workflow AI-DLC CERRADO
+**Timestamp**: 2026-05-25T16:10:00Z
+**User Input**: "Sí — cerrar workflow AI-DLC (Recommended)"
+**AI Response**: Workflow AI-DLC marcado como completo (docs 100%). Operations stage queda como placeholder MVP — sin actividades scoped. Procediendo a commit final + push a origin/main de los 5 instruction docs de Build and Test + state + audit.
+**Context**: 🏁 Fin del workflow AI-DLC para Hermes MVP. Pendientes diferidos (sin bloqueante): Code Generation U1/U2/U3 + refactor de stories.md + prd.md por Oct8ne OUT.
+
+---
