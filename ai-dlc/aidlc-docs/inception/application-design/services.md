@@ -19,7 +19,7 @@
 | `DashboardService` | `services/dashboard.service.ts` | `IDashboardService` | `fastify.dashboard` |
 | `AlertingService` | `services/alerting.service.ts` | `IAlertingService` | `fastify.alerting` |
 | `BrandConfigService` | `services/brand-config.service.ts` | `IBrandConfigService` | `fastify.brandConfig` |
-| `ABRoutingService` | `services/ab-routing.service.ts` | `IABRoutingService` | `fastify.abRouting` |
+| `RolloutGate` | `services/rollout-gate.service.ts` | `IRolloutGate` | `fastify.rolloutGate` |
 
 **Convención**: cada servicio se instancia una vez por proceso (singleton dentro del Fastify instance). Las dependencies se inyectan vía constructor en `app.ts` cuando se construye el Fastify instance.
 
@@ -94,7 +94,7 @@ sequenceDiagram
     participant Hand as HandoffService<br/>(M5)
     participant Sess as SessionService<br/>(M4)
     participant Comp as ComplianceService<br/>(M6)
-    participant Oct8 as Oct8ne Widget API
+    participant Email as Email Service<br/>(nodemailer + mailhog)
     participant Logger as LoggerService
 
     Cliente->>Conv: mensaje (sentimiento neg / out-of-scope / explicit request)
@@ -108,33 +108,36 @@ sequenceDiagram
         Hand->>Comp: anonymizePII(history) [solo para LOG; el paquete al agente lleva PII visible]
         Hand-->>Hand: HandoffPayload
 
-        Hand->>Oct8: transferToOct8ne(payload)
-        Oct8-->>Hand: HandoffResult { oct8neTicketId, transferredAt }
+        Hand->>Email: dispatchHandoff(payload)
+        Email-->>Hand: HandoffResult { handoffTicketId, dispatchedAt, deliveryChannel: "email" }
 
         Hand->>Logger: logHandoff(record) [PII anonimizada]
         Hand-->>Conv: HandoffResult
-        Conv->>Cliente: "te paso con una persona"
+        Conv->>Cliente: "Un asesor humano te contactará en X min/horas"
     end
 ```
 
 ---
 
-## 4. Orquestación del A/B routing (entrada al chat)
+## 4. Orquestación del Rollout Gate (entrada al widget)
 
-A nivel de widget, antes de que el cliente llegue al endpoint `/chat` de Hermes, hay una decisión de routing entre Hermes y Oct8ne. Para el MVP, el routing se hace en el **edge** (widget de SFCC consulta un endpoint pequeño `/ab/decide`).
+A nivel de widget, antes de que el cliente llegue al endpoint `/chat` de Hermes, el widget consulta `/widget/config` para saber si servir Hermes o el fallback humano. Sustituye el plan original "A/B vs Oct8ne" tras validación 2026-05-25 — Oct8ne no atiende chat (solo batch outbound), por lo que el "otro lado" del split es el **fallback humano-en-horario** (o mensaje informativo fuera de horario), no otro bot.
 
 ```mermaid
 flowchart LR
-    Cliente[Cliente abre widget] --> Edge["/ab/decide?brand=patprimo&sessionId=..."]
-    Edge --> Hash{hash(sessionId) mod 100}
-    Hash -->|< hermesPercent| Hermes[Routea a Hermes /chat]
-    Hash -->|>= hermesPercent| Oct8[Routea a Oct8ne widget]
+    Cliente[Cliente abre widget] --> Edge["GET /widget/config?brand=patprimo&sessionId=..."]
+    Edge --> KillCheck{hermes_enabled?}
+    KillCheck -->|false kill switch| Fallback[Servir mensaje fallback humano-en-horario]
+    KillCheck -->|true| Hash{hash sha256 sessionId+rollout_salt mod 100}
+    Hash -->|< hermes_traffic_percentage| Hermes[Routea a Hermes /chat]
+    Hash -->|>= hermes_traffic_percentage| Fallback
 
-    AutoRollback[AlertingService<br/>evalúa cada N min] -.->|si KPI cae| FlipSplit[ABRoutingService.setSplit<br/>hermesPercent = 0]
-    FlipSplit -.-> Edge
+    Alerts[AlertingService<br/>evalúa rules cada 1 min] -.->|si KPI degrada| SlackEmail[Slack/email al operador]
+    SlackEmail -.->|manual decision| Ops((Operador))
+    Ops -.->|PATCH /admin/rollout/kill-switch o /traffic-percentage| Edge
 ```
 
-**Decisión técnica**: `decideBot()` es **stateless por request**, deterministic por `sessionId`. La regla `autoRollback` corre como **scheduled job** dentro de `AlertingService`.
+**Decisión técnica**: `shouldServeHermes()` es **stateless por request**, determinístico por `sessionId + rollout_salt`. Cache in-memory 60s en RolloutGate para hot-path del widget. *Auto-rollback automático por degradación de KPI = Fase 2 per Unit 3 NFR-R; MVP usa alerting → acción manual del operador alertado vía Slack/email.*
 
 ---
 
@@ -148,16 +151,15 @@ flowchart LR
 ### 5.2 External
 - **A SFCC**: HTTP REST sobre OCAPI/SCAPI. `axios` o `undici` (decisión en Code Generation).
 - **A Bedrock**: SDK `@anthropic-ai/bedrock-sdk` (request/response; streaming en Fase 2 si latencia lo exige).
-- **A Oct8ne**: HTTP REST sobre su API pública o webhook bridge (a confirmar con vendor en Functional Design Unit 3).
-- **A frontend (widget)**: HTTP JSON sobre `/chat`, `/ab/decide`, `/health`, etc. CORS restricted a origins explícitos de SFCC (SECURITY-08).
+- **A Email Service**: SMTP vía `nodemailer` (mailhog en dev; SMTP real Fase 2 — WhatsApp Business / Salesforce Service Cloud planificados como targets alternativos para Fase 2). El pipeline DeliveryAdapter de M5 encapsula este outbound.
+- **A frontend (widget)**: HTTP JSON sobre `/chat`, `/widget/config`, `/health`, etc. CORS restricted a origins explícitos de SFCC (SECURITY-08).
 
 ### 5.3 Background jobs (MVP scope)
 | Job | Frecuencia | Servicio | Notas |
 |---|---|---|---|
 | Session cleanup | 30 min | SessionService.closeStale | TTL-based |
 | Retention enforcement | Daily | ComplianceService.enforceRetention | purga registros vencidos |
-| AB rollback evaluator | 5 min | ABRoutingService.autoRollback | corre rules; flip split si trigger |
-| Alert rule evaluator | 1 min | AlertingService.evaluateRules | dispara notificaciones |
+| Alert rule evaluator | 1 min | AlertingService.evaluateRules | dispara notificaciones (Slack/email) al operador; auto-rollback por KPI degradado = Fase 2 (MVP requiere acción manual del operador) |
 
 **Runner**: para MVP, jobs corren dentro del mismo proceso usando `node-cron` o `setInterval` con jitter. En Fase 2 → mover a worker dedicado o scheduler AWS.
 

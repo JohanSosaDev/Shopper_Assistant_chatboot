@@ -93,11 +93,11 @@ La columna vertebral del MVP: entrega el **Caso 1 (estado de pedido) end-to-end*
 ## Unit 3 — Handoff & Convivencia (+ Operations Dashboards)
 
 ### Definition
-Cierra el loop del MVP: **handoff de primera clase** a Oct8ne con paquete de contexto + **A/B routing** entre Hermes y Oct8ne con rollback automático + **dashboards operacionales** para el operador (read-path de M7). Sin esta unidad no hay deploy a producción seguro.
+Cierra el loop del MVP: **handoff de primera clase** con notificación email/teléfono al equipo CX (stub MVP) + **despliegue gradual con kill switch** (RolloutGate) + **dashboards operacionales** para el operador (read-path de M7). Sin esta unidad no hay deploy a producción seguro. Sustituye el plan original "handoff a widget Oct8ne + A/B vs Oct8ne" tras validación 2026-05-25 (Oct8ne no atiende chat — solo batch outbound manual).
 
 ### Modules owned
-- M5 — Human Handoff (triggers, paquete contexto, transferencia Oct8ne)
-- M8 — A/B Routing (split config + auto-rollback) *(complementa el CRUD de Unit 2)*
+- M5 — Human Handoff (pipeline `TriggerDetector → PackageBuilder → DeliveryAdapter` con nodemailer + mailhog en dev; SMTP real Fase 2)
+- M8 — RolloutGate (kill switch + traffic % via `system_config`) *(complementa el CRUD de Unit 2)*
 - M7 — Observability **(read-path)** — dashboards, drill-down, alertas
 
 ### Modules extended
@@ -110,29 +110,29 @@ Cierra el loop del MVP: **handoff de primera clase** a Oct8ne con paquete de con
 - E2-S3 — Alertas configurables
 - E3-S1 — Detección automática de triggers de handoff
 - E3-S2 — Construcción del paquete de contexto al escalar
-- E3-S3 — Transferencia operativa al widget Oct8ne
+- E3-S3 — Transferencia operativa al equipo CX vía notificación email/teléfono
 - E3-S4 — Botón "Hablar con persona" persistente
-- E4-S2 — Convivencia A/B Hermes vs Oct8ne con rollback automático
+- E4-S2 — Despliegue gradual de Hermes con kill switch (auto-rollback por degradación = Fase 2)
 
 **Story count: 8**
 
 ### Deliverables
-- Migrations: `handoff_log`, `ab_split_config`, `ab_rollback_rules`, `alert_rules`, `escalation_index`
-- Service `HandoffService` con triggers + paquete contexto + transferToOct8ne
-- Service `ABRoutingService` con `decideBot()` stateless + auto-rollback job
+- Migrations: `handoff_tickets`, `system_config` (con `rollout_salt`, `hermes_enabled`, `hermes_traffic_percentage`, `handoff_stub_message`), `system_config_audit`, `alert_rules`, `escalation_index`
+- Service `HandoffService` con pipeline `TriggerDetector → PackageBuilder → DeliveryAdapter` (DeliveryAdapter usa nodemailer + mailhog en dev; SMTP real Fase 2)
+- Service `RolloutGate` con `shouldServeHermes(identifier): boolean` stateless (hash SHA-256 + `rollout_salt` + bucket vs `hermes_traffic_percentage`). *Auto-rollback por degradación de KPI = Fase 2 per Unit 3 NFR-R; MVP requiere acción manual del operador alertado vía Slack.*
 - Service `DashboardService` con queries para KPI snapshot, escalation list, conversation view
 - Service `AlertingService` con rule registry + scheduled evaluator
-- Endpoint público `GET /ab/decide` (consumido por widget SFCC al cargar)
-- Endpoints admin: `/admin/dashboard/kpis`, `/admin/dashboard/escalations`, `/admin/alerts/rules`, `/admin/ab/split`
-- Integración con widget Oct8ne (REST o webhook bridge — confirmar en Functional Design Unit 3)
-- Tests: handoff e2e + A/B determinism + rollback automático + dashboard queries
+- Endpoint público `GET /widget/config` (consumido por widget SFCC al cargar; RolloutGate decide servir Hermes o fallback humano-en-horario)
+- Endpoints admin: `/admin/dashboard/kpis`, `/admin/dashboard/escalations`, `/admin/alerts/rules`, `/admin/rollout/config`, `PATCH /admin/rollout/traffic-percentage`, `PATCH /admin/rollout/kill-switch`, `/admin/handoff-tickets`
+- Email service integration (nodemailer + mailhog en dev) para notificación al equipo CX; sin integración con widget de terceros en MVP (WhatsApp Business y/o Salesforce Service Cloud planificados para Fase 2)
+- Tests: handoff e2e + RolloutGate PBT (determinismo, monotonía, kill switch absoluto) + dashboard queries
 
 ### Definition of Done
-- Cliente con sentimiento negativo o request explícito → escalado a agente humano vía Oct8ne con paquete contexto completo, <60 seg.
-- A/B determinístico por `sessionId` con split configurable; rollback automático en <5 min si KPI fuera de banda.
+- Cliente con sentimiento negativo o request explícito → notificación al equipo CX vía email/teléfono con paquete contexto completo, <60 seg.
+- RolloutGate determinístico por `sessionId` con split configurable + kill switch operable en <1 min via `PATCH /admin/rollout/kill-switch`. *Auto-rollback por degradación = Fase 2; MVP requiere operador alertado.*
 - Dashboard operador renderiza los 6 KPIs primarios + drill-down a conversaciones individuales.
 - Las 8 stories tienen tests pasando contra sus AC Gherkin.
-- SLA Oct8ne >95% preservado durante operación A/B (no-regression).
+- SLA del canal humano fallback (atención en horario) preservado durante operación gradual rollout (no-regression). *Oct8ne no atiende chat — solo batch outbound, canal independiente.*
 
 ---
 
@@ -153,7 +153,8 @@ hermes/src/
 │   ├── m5-handoff.plugin.ts             # Unit 3
 │   ├── m6-compliance.plugin.ts          # Unit 1 (creación) + Unit 3 (handoff PII)
 │   ├── m7-observability.plugin.ts       # Unit 1 (write) + Unit 3 (read/dashboards)
-│   ├── m8-brand-config.plugin.ts        # Unit 2 (CRUD) + Unit 3 (A/B routing)
+│   ├── m8-brand-config.plugin.ts        # Unit 2 (CRUD)
+│   ├── m8-rollout.plugin.ts             # Unit 3 (RolloutGate + kill switch + traffic %)
 │   ├── postgres.plugin.ts               # Unit 1
 │   ├── bedrock.plugin.ts                # Unit 1
 │   ├── error-handler.plugin.ts          # Unit 1
@@ -169,13 +170,12 @@ hermes/src/
 └── jobs/
     ├── session-cleanup.job.ts         # Unit 1
     ├── retention.job.ts               # Unit 1
-    ├── ab-rollback.job.ts             # Unit 3
-    └── alert-evaluator.job.ts         # Unit 3
+    └── alert-evaluator.job.ts         # Unit 3 (auto-rollback por KPI = Fase 2; MVP usa alerting + acción manual)
 
 hermes/migrations/
 ├── 0001_unit1_base.sql                # Unit 1
 ├── 0002_unit2_brand_config.sql        # Unit 2
-└── 0003_unit3_handoff_ab.sql          # Unit 3
+└── 0003_unit3_handoff_rollout.sql    # Unit 3
 ```
 
 ### Ownership rules (per Q2=A, Q3=C)

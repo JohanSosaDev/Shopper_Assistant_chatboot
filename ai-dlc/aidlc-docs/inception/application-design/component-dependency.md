@@ -17,7 +17,7 @@ Una fila depende de las columnas marcadas con ✅. "Dependencia" = invoca métod
 | **M5 Handoff** | — | — | ✅ (orderHistory) | ✅ | — | ✅ (PII anon en log) | ✅ | ✅ (brand context) | — | ✅ |
 | **M6 Compliance** | — | — | — | — | — | — | ✅ | — | — | ✅ |
 | **M7 Observability** | — | — | — | — | — | — | — | — | — | ✅ |
-| **M8 Brand Config + A/B** | — | — | — | — | — | — | ✅ | — | — | ✅ |
+| **M8 Brand Config + RolloutGate** | — | — | — | — | — | — | ✅ | — | — | ✅ |
 | **CC-1 App (composition root)** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ |
 | **CC-2 Global Error Handler** | — | — | — | — | — | — | ✅ | — | — | — |
 | **CC-3 Request Context** | — | — | — | — | — | — | ✅ | — | — | — |
@@ -45,13 +45,13 @@ Cualquier estado que cruza requests vive en Postgres. Ejemplos:
 - `turn_log` (M7)
 - `handoff_log` (M5)
 - `brand_config_versions` (M8)
-- `ab_split_config` (M8)
+- `system_config` con `rollout_salt`, `hermes_enabled`, `hermes_traffic_percentage`, `handoff_stub_message` + `system_config_audit` (M8)
 
 ### 2.3 External HTTP (sync)
 Tres outbound integrations:
 - **SFCC OCAPI/SCAPI** (M3) — REST/JSON
 - **AWS Bedrock LATAM** (M1 vía SDK) — invocación SDK que internamente hace HTTPS
-- **Oct8ne API** (M5) — REST/JSON (a confirmar en Functional Design Unit 3)
+- **Email Service** (M5) — SMTP vía `nodemailer` (mailhog en dev; SMTP real Fase 2 — WhatsApp Business o Salesforce Service Cloud planificados como targets alternativos Fase 2)
 
 Todas con: retry exponential backoff (3 attempts), circuit breaker, timeout explícito (10s default por call).
 
@@ -59,8 +59,7 @@ Todas con: retry exponential backoff (3 attempts), circuit breaker, timeout expl
 Implementación MVP: `node-cron` o `setInterval` dentro del mismo proceso Fastify.
 - Session cleanup (M4) — cada 30 min
 - Retention enforcement (M6) — daily
-- AB rollback evaluator (M8) — cada 5 min
-- Alert rule evaluator (M7) — cada 1 min
+- Alert rule evaluator (M7) — cada 1 min (alerta al operador vía Slack/email; auto-rollback por degradación de KPI = Fase 2 per Unit 3 NFR-R)
 
 **Riesgo conocido**: si el proceso crashea, los jobs no se ejecutan. **Aceptable en MVP** porque Docker Compose puede restart-on-failure. Fase 2 → migrar a scheduler externo.
 
@@ -127,35 +126,37 @@ flowchart LR
 
     M5 -->|build HandoffPayload| Payload[(HandoffPayload<br/>identidad + history +<br/>intent + sentiment +<br/>order history + category)]
 
-    Payload -->|transferToOct8ne| Oct8[Oct8ne API]
-    Oct8 -->|oct8neTicketId| M5
+    Payload -->|dispatchHandoff| Email[Email Service<br/>nodemailer + mailhog]
+    Email -->|handoffTicketId HT-2026-XXXX| M5
 
     M5 -->|anonymizePII history| M6[ComplianceService M6]
     M5 -->|logHandoff| M7[LoggerService M7]
 
     style M5 fill:#4CAF50,color:#fff
     style Payload fill:#FFB300,color:#000
-    style Oct8 fill:#FFB300,color:#000
+    style Email fill:#FFB300,color:#000
 ```
 
-### 3.3 A/B routing al inicio de la sesión
+### 3.3 Rollout Gate al inicio de la sesión
 
 ```mermaid
 flowchart TB
-    Widget([Widget SFCC]) -->|GET /ab/decide?brand=patprimo&sessionId=X| ABCtrl[AB Controller]
-    ABCtrl -->|decideBot| ABSvc[ABRoutingService M8]
-    ABSvc -->|getCurrentSplit| PG[(Postgres<br/>ab_split_config)]
-    PG -->|hermesPercent: 10| ABSvc
-    ABSvc -->|hash sessionId mod 100| ABSvc
-    ABSvc -->|return 'hermes' o 'oct8ne'| ABCtrl
-    ABCtrl -->|200 OK { target: 'hermes'/'oct8ne' }| Widget
+    Widget([Widget SFCC]) -->|GET /widget/config?brand=patprimo&sessionId=X| WCfgCtrl[Widget Config Controller]
+    WCfgCtrl -->|shouldServeHermes identifier| RGate[RolloutGate M8]
+    RGate -->|getConfig cached 60s| PG[(Postgres<br/>system_config)]
+    PG -->|hermes_enabled + traffic_pct + rollout_salt| RGate
+    RGate -->|hash sha256 identifier+rollout_salt mod 100| RGate
+    RGate -->|boolean: serve hermes?| WCfgCtrl
+    WCfgCtrl -->|200 OK target: hermes o fallback| Widget
 
-    Cron[AlertingService cron 5min] -.->|evaluate rules| ABSvc
-    ABSvc -.->|si KPI < threshold| Rollback[setSplit hermesPercent=0]
-    Rollback -.->|UPDATE| PG
+    Cron[AlertingService cron 1min] -.->|evaluate rules| Alert[Alert]
+    Alert -.->|Slack/email a operador| Operator((Operador))
+    Operator -.->|manual: PATCH /admin/rollout/kill-switch| PG
 
-    style ABSvc fill:#4CAF50,color:#fff
+    style RGate fill:#4CAF50,color:#fff
 ```
+
+*Nota*: auto-rollback por degradación de KPI = Fase 2 per Unit 3 NFR-R. MVP usa alerting → operador alertado → acción manual via `PATCH /admin/rollout/kill-switch` o `PATCH /admin/rollout/traffic-percentage`.
 
 ---
 
@@ -166,8 +167,8 @@ Cuando lleguemos a Code Generation por unit, estos son los flujos que **no puede
 | Path | Pasos | Stories | Riesgo si falla |
 |---|---|---|---|
 | **P-1 Happy Caso 1** | Cliente → /chat → consent → tool call SFCC → respuesta | E1-S1..S6 | MVP no demo-able |
-| **P-2 Handoff** | Trigger detectado → context package → Oct8ne | E3-S1..S4 | Anti-pattern ASOS, riesgo regulatorio |
-| **P-3 A/B + rollback** | decideBot → routing decision → rollback automático | E4-S2 | No se valida promesa de conversión |
+| **P-2 Handoff** | Trigger detectado → context package → notificación email/teléfono al equipo CX | E3-S1..S4 | Anti-pattern ASOS, riesgo regulatorio |
+| **P-3 RolloutGate + kill switch** | shouldServeHermes → routing decision (hermes vs fallback humano) → alerts si KPI degrada → operador manual kill switch | E4-S2 | No se valida promesa de conversión; sin kill switch operativo, no hay safety net (auto-rollback automático = Fase 2) |
 | **P-4 Logging audit** | Cada turno → log estructurado → append-only persistido | E1-S6 | No defensa ante SIC |
 
 Functional Design por unit debe priorizar estos en orden P-1 > P-4 > P-2 > P-3.
@@ -178,7 +179,7 @@ Functional Design por unit debe priorizar estos en orden P-1 > P-4 > P-2 > P-3.
 
 | Rule | Status | Notas |
 |---|---|---|
-| SECURITY-08 | Aplicado | Diagramas hacen explícito que `/chat` es público pero requiere consent gate; `/ab/decide` es público stateless; endpoints admin requieren auth middleware (definido en Functional Design Unit 2) |
+| SECURITY-08 | Aplicado | Diagramas hacen explícito que `/chat` es público pero requiere consent gate; `/widget/config` es público stateless (RolloutGate hot-path cacheado 60s); endpoints admin (incluyendo `/admin/rollout/*` solo rol `admin`) requieren auth middleware (definido en Functional Design Unit 2) |
 | SECURITY-11 | Aplicado | Diagrama de dependencia muestra M6 aislado; secrets (Bedrock credentials, SFCC tokens) no aparecen en flow — se cargan vía env vars y secret manager |
 | Otros | N/A en este stage | Code-level — se evalúan en stages siguientes |
 

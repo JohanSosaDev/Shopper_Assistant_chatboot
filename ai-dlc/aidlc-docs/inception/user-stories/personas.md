@@ -19,7 +19,7 @@
 ## P2 — Agente humano (Camila, arquetipo Atmos fin de semana)
 
 - **Rol**: Agente de servicio al cliente de marca; equipo dedicado por marca (PRD §3). Arquetipo = Camila, Atmos, sábado.
-- **Acceso**: Widget operador de Oct8ne con paquete de contexto Hermes pre-cargado.
+- **Acceso**: Notificación email/teléfono con paquete de contexto Hermes pre-cargado (MVP stub). Widget operador integrado (WhatsApp Business o Salesforce Service Cloud) planificado para Fase 2.
 - **Responsabilidades**: Recibir escalamientos del bot; resolver casos L2/L3 (devolución, queja, retención); validar autorizaciones discrecionales (cupones, cambios).
 - **Dolor que Hermes resuelve**: Hoy recibe escalamientos sin contexto y el cliente debe repetir todo, generando frustración y AHT alto. Con Hermes, recibe ticket pre-cargado con conversación previa, identidad, histórico de pedidos, sentimiento y categorización sugerida.
 - **Métrica de éxito**: AHT humano <3 min (vs. baseline 8–12 min); contexto preservado 100%; satisfacción del propio agente ≥4/5 en encuesta interna mensual.
@@ -31,7 +31,7 @@
 - **Rol**: Operadora-curadora del bot. Arquetipo = Daniela, 31 años, 5 años en PASH.
 - **Acceso**: Dashboard del operador (KPIs, drill-down, alertas) + KB editor + admin sobre prompts y configuraciones operativas (no infra).
 - **Responsabilidades**: Monitorear salud del bot (KPIs, guardrails violations, conversión, CSAT); diagnosticar incidentes (ej. KB desactualizada); abrir tickets sistémicos; coordinar re-indexación; auditar muestras de conversaciones; preparar reportes semanales para sponsor y Brand Manager.
-- **Dolor que Hermes resuelve**: Hoy no existe operación del chat más allá del SLA de Oct8ne; sin instrumentación cross-marca; sin contexto agregado para detectar patrones (ej. nueva colección no indexada). Con Hermes obtiene visión consolidada y actionable.
+- **Dolor que Hermes resuelve**: Hoy no hay chat activo en Patprimo (Oct8ne solo se usa para batch outbound manual vía Excel — no atiende conversaciones en vivo); sin instrumentación de canal conversacional; sin instrumentación cross-marca; sin contexto agregado para detectar patrones (ej. nueva colección no indexada). Con Hermes obtiene visión consolidada y actionable.
 - **Métrica de éxito**: Tiempo de detección de incidentes <30 min (lunes mañana); ≥1 acción correctiva por semana; reporte semanal entregado on-time.
 
 ---
@@ -41,7 +41,7 @@
 - **Rol**: Responsable de la marca; dueño de la voz, identidad y estándares de comunicación.
 - **Acceso**: Visor de muestras de conversaciones + sign-off interface + Brand config editor (read-write para su marca).
 - **Responsabilidades**: Validar el system prompt y los 10–20 ejemplos few-shot iniciales; aprobar cambios mayores a la voz; revisar muestra semanal de conversaciones; vetar si el bot suena off-brand.
-- **Dolor que Hermes resuelve**: Hoy el chat de Patprimo (Oct8ne) tiene voz humana porque cada respuesta es escrita por un agente. La preocupación principal del Brand Manager con cualquier bot es que "suene genérico" — riesgo cubierto en PRD §12 Riesgo 5. Hermes le da control explícito sobre la voz y un sign-off auditable.
+- **Dolor que Hermes resuelve**: Hoy Patprimo no tiene chat activo (Oct8ne fue rule-based 2022-2023 pero hoy solo se usa para batch outbound manual). Las pocas interacciones tipo chat ocurren por atención humana directa con voz natural. La preocupación del Brand Manager con cualquier bot es que "suene genérico" — riesgo cubierto en PRD §12 Riesgo 5. Hermes le da control explícito sobre la voz y un sign-off auditable.
 - **Métrica de éxito**: 0 vetos a respuestas representativas en el último mes; ≥90% de muestra semanal aprobada sin cambios; aprobación firmada del system prompt v1 antes de launch.
 
 ---
@@ -60,8 +60,8 @@
 
 - **Rol**: Equipo técnico que construye, opera y evoluciona Hermes.
 - **Acceso**: Admin console (acceso completo: prompts, tools, infra, secrets via secrets manager, deploy pipelines, logs raw, eval suite).
-- **Responsabilidades**: Implementar features; mantener uptime; iterar prompts y guardrails; correr eval suite del agente (PRD §11); coordinar releases; responder a incidentes operativos; ejecutar runbooks de rollback A/B vs Oct8ne.
-- **Dolor que Hermes resuelve**: Greenfield — no hay legacy del lado del bot que mantener, pero sí responsabilidad de no degradar el SLA actual de Patprimo (>95% en horario) y de mantener convivencia con Oct8ne. Necesita observabilidad fuerte para diagnosticar rápido.
+- **Responsabilidades**: Implementar features; mantener uptime; iterar prompts y guardrails; correr eval suite del agente (PRD §11); coordinar releases; responder a incidentes operativos; ejecutar runbooks de kill switch (`HERMES_ENABLED=false` → fallback humano en horario) y rollback del despliegue gradual.
+- **Dolor que Hermes resuelve**: Greenfield — no hay legacy del lado del bot que mantener, pero sí responsabilidad de no degradar el SLA actual de atención humana en Patprimo (>95% en horario) ni interferir con el canal batch outbound de Oct8ne (canales independientes). Necesita observabilidad fuerte para diagnosticar rápido.
 - **Métrica de éxito**: Uptime ≥99% MVP; tiempo a rollback <5 min; releases sin incidente; eval suite verde antes de cada deploy.
 
 ---
@@ -70,7 +70,7 @@
 
 - **Rol**: Decisor estratégico. CTO = sponsor técnico (dueño del stack SFCC y del presupuesto cloud). CMO = co-sponsor comercial (decisión Brand Managers cross-marca).
 - **Acceso**: Dashboard ejecutivo (read-only, KPIs agregados, ROI, costo unitario, conversión, CSAT, cobertura).
-- **Responsabilidades**: Decidir continuidad MVP → Fase 2; aprobar expansión a otras marcas y países; aprobar reasignación de presupuesto entre Oct8ne y Hermes según métricas de conversión y costo unitario.
+- **Responsabilidades**: Decidir continuidad MVP → Fase 2; aprobar expansión a otras marcas y países; aprobar reasignación de presupuesto entre atención humana, Hermes y, eventualmente, WhatsApp Business / Service Cloud Fase 2 según métricas de conversión y costo unitario.
 - **Dolor que Hermes resuelve**: Hoy no hay business case cuantificado para escalar atención multi-marca/multi-país. Con Hermes obtiene métricas que defienden expansión 2026 sin crecimiento lineal de headcount.
 - **Métrica de éxito**: ROI año 1 ≥3×; payback <6 meses; decisión documentada de continuar a Fase 2 antes del 30 julio 2026.
 
@@ -85,5 +85,5 @@
 | P3 Operador | ✅ Secondary (logs) | ✅ Primary | ✅ Secondary (audit) | ✅ Secondary |
 | P4 Brand Manager | ✅ Secondary (voz) | — | — | ✅ Primary (sign-off) |
 | P5 Compliance | ✅ Secondary (consent) | ✅ Secondary (audit) | ✅ Secondary (handoff log) | — |
-| P6 Admin/Dev | ✅ Secondary (deploy) | ✅ Secondary (alerts) | ✅ Secondary (rollback) | ✅ Primary (A/B Oct8ne) |
+| P6 Admin/Dev | ✅ Secondary (deploy) | ✅ Secondary (alerts) | ✅ Secondary (rollback) | ✅ Primary (despliegue gradual + kill switch) |
 | P7 Sponsor | — | ✅ Secondary (KPIs read) | — | — |

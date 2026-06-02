@@ -285,7 +285,7 @@ Scenario: Vista de conversación completa
   Then se ve la transcripción turno por turno con todos los datos del log
   And se ven las tool calls invocadas con inputs y outputs
   And se ve el paquete de contexto enviado al agente humano
-  And se ve la respuesta del agente humano (si está disponible vía Oct8ne)
+  And se ve la respuesta del agente humano (si está disponible vía sistema de tickets / email del equipo CX)
 
 Scenario: Detección de patrón en agregado
   Given una hipótesis de patrón (ej. "consultas sobre producto X fallan")
@@ -331,13 +331,13 @@ Scenario: Configuración de reglas sin re-deploy
 ### E2-S4 — Fase 0: instrumentación de baseline pre-launch
 
 **Job Story**
-Cuando aún no se ha lanzado Hermes, yo (P3 Operador junto con P6 Admin/Dev) quiero medir el baseline real de los 6 KPIs en el modelo actual (Oct8ne + agentes humanos), para que el caso de negocio del MVP sea defendible con datos en lugar de estimaciones.
+Cuando aún no se ha lanzado Hermes, yo (P3 Operador junto con P6 Admin/Dev) quiero medir el baseline real de los 6 KPIs en el modelo actual (atención humana directa en las 4 marcas; Oct8ne solo se usa para batch outbound manual vía Excel, no atiende chat), para que el caso de negocio del MVP sea defendible con datos en lugar de estimaciones.
 
 **Acceptance Criteria**
 
 ```gherkin
 Scenario: Instrumentación captura los 6 KPIs del PRD §10 + CSAT/NPS
-  Given el modelo actual (Oct8ne en Patprimo + humano en las otras 3 marcas)
+  Given el modelo actual (atención humana en las 4 marcas; Oct8ne en Patprimo se usa solo para batch outbound manual)
   When la Fase 0 está corriendo
   Then se capturan los 6 KPIs primarios + CSAT post-conversación + NPS
   And los datos se guardan en el mismo data lake que usará Hermes para comparabilidad
@@ -436,35 +436,42 @@ Scenario: Paquete vacío rechazado
 
 ---
 
-### E3-S3 — Transferencia operativa al widget Oct8ne
+### E3-S3 — Transferencia operativa al equipo CX vía notificación email/teléfono (MVP stub)
 
 **Job Story**
-Cuando se construyó el paquete de contexto y el agente humano está disponible, yo (P6 Admin/Dev) quiero que el sistema transfiera la sesión al widget Oct8ne con el paquete pre-cargado, para que el cliente no pierda el hilo ni el agente tenga que cambiar de herramienta.
+Cuando se construyó el paquete de contexto y se necesita escalar a un agente humano, yo (P6 Admin/Dev) quiero que el sistema envíe una notificación email/teléfono al equipo CX con el paquete pre-cargado (MVP stub) e informe al cliente del tiempo de respuesta, para que el cliente sepa qué esperar y el agente tenga toda la información necesaria sin que el cliente tenga que repetir. Widget operador integrado (WhatsApp Business o Salesforce Service Cloud) se planifica para Fase 2.
 
 **Acceptance Criteria**
 
 ```gherkin
-Scenario: Transferencia exitosa en <60 segundos
-  Given el paquete está listo y hay agentes disponibles
+Scenario: Notificación al equipo CX en <60 segundos
+  Given el paquete está listo y la notificación es necesaria
   When se ejecuta la transferencia
-  Then el cliente ve mensaje "te paso con una persona" en <5 seg
-  And el agente humano recibe el ticket pre-cargado en Oct8ne en <60 seg desde el trigger
-  And la transición es visible al cliente (UI cambia sutilmente)
+  Then el cliente ve mensaje "Un asesor humano te contactará en X minutos/horas (según horario)" en <5 seg
+  And el equipo CX recibe email "[ALTA] Hermes Handoff HT-2026-XXXX" con el paquete pre-cargado en <60 seg desde el trigger
+  And la transición es visible al cliente (UI cambia sutilmente; el chat de Hermes queda en estado "esperando humano")
 
-Scenario: Sin agentes disponibles
-  Given se intenta handoff fuera de horario humano
+Scenario: Sin agentes disponibles (fuera de horario)
+  Given se intenta handoff fuera del horario del equipo CX
   When no hay agentes online
-  Then el bot le ofrece al cliente: dejar mensaje (que se loguea como ticket priorizado) o esperar al siguiente horario
-  And el customer_id queda flag para "follow-up requerido"
+  Then el bot informa al cliente del horario próximo de atención y le confirma que su caso está priorizado para esa ventana
+  And el handoff_log queda con flag "follow-up_required=true" y prioridad alta
+  And la notificación email queda en cola para revisión al inicio del próximo horario
 
 Scenario: Métrica AHT humano post-handoff
   Given una conversación que fue escalada
-  When se mide el AHT del agente humano desde la recepción hasta el cierre
-  Then el target es <3 min (vs baseline 8–12 min) gracias al contexto pre-cargado
+  When se mide el AHT del agente humano desde la recepción del email hasta el cierre del caso
+  Then el target es <3 min de tiempo activo (vs baseline 8–12 min) gracias al contexto pre-cargado en el email
   And el dashboard de E2 muestra esta métrica agregada
+
+Scenario: Tracking del handoff en sistema de tickets
+  Given una notificación enviada al equipo CX
+  When el equipo CX procesa el caso (responde por email, llama por teléfono, o usa el canal preferido del cliente)
+  Then el `handoff_log` se actualiza con `resolved_at`, `resolved_by`, `outcome` y `time_to_first_human_contact`
+  And esos campos alimentan el dashboard E2 + reporte semanal de P3 Operador
 ```
 
-**Persona**: P6 Admin/Dev (primary); P2 Agente humano (beneficiary)
+**Persona**: P6 Admin/Dev (primary); P2 Agente humano (beneficiary); P3 Operador (secondary — tracking del SLA)
 
 ---
 
@@ -503,7 +510,7 @@ Scenario: Acceso accesible (a11y mínima MVP)
 # Epic E4 — Cross-cutting Setup
 
 > **Journey PRD §7** = (no es un Journey explícito; agrupa features de configuración)
-> **MH cubiertos**: MH-3 (per-brand voice Patprimo), MH-9 (convivencia A/B Oct8ne)
+> **MH cubiertos**: MH-3 (per-brand voice Patprimo), MH-9 (despliegue gradual con kill switch)
 > **Módulos PRD §9**: M8 (Configuración por marca), M5/M7/M9 (A/B logic)
 > **Stories**: 2 (gruesa granularity per Q4=D — config-heavy)
 > **Nota**: stories aquí son **gruesas** (1 story ≈ 1 feature MH) porque son configuración + un solo entregable atómico, no flujos paso-a-paso.
@@ -548,38 +555,48 @@ Scenario: Versionado de configuraciones por marca
 
 ---
 
-### E4-S2 — Convivencia A/B Hermes vs Oct8ne con rollback automático
+### E4-S2 — Despliegue gradual de Hermes con kill switch + alertas (auto-rollback Fase 2)
 
 **Job Story**
-Cuando lanzamos Hermes a producción en Patprimo, yo (P6 Admin/Dev junto con P3 Operador) quiero un mecanismo de A/B (división de tráfico configurable + rollback automático si KPIs degradan) en lugar de un cutover total, para validar la promesa de conversión sin comprometer el 50–60% de ventas online que hoy fluyen por Oct8ne.
+Cuando lanzamos Hermes a producción en Patprimo, yo (P6 Admin/Dev junto con P3 Operador) quiero un mecanismo de despliegue gradual (split de tráfico configurable + kill switch `HERMES_ENABLED` + rollback automático si KPIs degradan) en lugar de un cutover total, para validar la promesa de conversión sin riesgo: si Hermes degrada, los clientes vuelven al fallback humano (atención humana en horario; fuera de horario, mensaje claro de "te contactaremos en X") sin pasar por experiencia rota. Contexto: validado 2026-05-25 — Oct8ne NO atiende chat en Patprimo (solo se usa para envío batch outbound vía Excel manual), por lo que Hermes es el **primer chat activo** en la marca y el despliegue gradual no es A/B contra otro bot sino contra el modelo de atención humana directa.
 
 **Acceptance Criteria**
 
 ```gherkin
-Scenario: Configuración de split de tráfico
-  Given Hermes y Oct8ne ambos operativos
-  When P6 Admin configura el split (ej. 90% Oct8ne / 10% Hermes inicial)
-  Then la decisión de qué clientes ven cuál bot es determinística (hash del session_id o customer_id)
-  And el split se puede actualizar sin re-deploy en <1 min
+Scenario: Configuración de split de tráfico gradual
+  Given Hermes desplegado y la flag `HERMES_ENABLED=true`
+  When P6 Admin configura el porcentaje de tráfico (ej. 10% Hermes / 90% fallback humano-en-horario)
+  Then la decisión de qué clientes ven Hermes es determinística (hash del session_id o customer_id mod 100)
+  And el split se puede actualizar sin re-deploy en <1 min via admin UI
+  And los clientes que NO ven Hermes ven el flujo previo (mensaje "atención humana en horario X" o formulario contacto)
 
-Scenario: Métricas comparativas dimensionalmente equivalentes
-  Given clientes asignados a uno u otro bot
+Scenario: Métricas comparativas Hermes vs fallback
+  Given clientes asignados a Hermes o al fallback humano
   When se computan las métricas
-  Then los 6 KPIs primarios (1ª respuesta, conversión, CSAT, costo, etc.) están disponibles para ambos bots con la misma definición y ventana de tiempo
-  And el dashboard E2-S1 muestra comparativa lado a lado
+  Then los 6 KPIs primarios (1ª respuesta, conversión, CSAT, costo, etc.) están disponibles para ambos brazos con la misma definición y ventana de tiempo
+  And el dashboard E2-S1 muestra comparativa lado a lado (Hermes vs baseline humano)
 
-Scenario: Rollback automático por degradación
-  Given una regla configurada (ej. "conversión Hermes <40% durante 24h → split = 100% Oct8ne")
+Scenario: Kill switch global ante incidente crítico
+  Given un incidente crítico (guardrail violation masivo, error de compliance, degradación severa)
+  When P6 Admin o un alert automático cambia `HERMES_ENABLED=false`
+  Then el 100% del tráfico se redirige al fallback humano en <1 min (sin re-deploy)
+  And se notifica a P3 Operador, P5 Compliance y P6 Admin
+  And la decisión queda en log auditable con `triggered_by`, `reason`, `timestamp`
+
+Scenario: Alertas sobre degradación de KPI (rollback manual por operador)
+  Given una regla configurada (ej. "conversión Hermes <40% durante 24h" o "guardrail violations >5/h")
   When la condición se cumple
-  Then el sistema reasigna automáticamente 100% del tráfico a Oct8ne en <5 min
-  And se notifica a P3 Operador y P6 Admin
-  And la decisión queda en log auditable
+  Then AlertingService notifica a P3 Operador y P6 Admin vía Slack/email en <5 min
+  And la alerta incluye link al dashboard con KPI fuera de banda + opción rápida de acción manual
+  And P3 Operador (o P6 Admin) ejecuta `PATCH /admin/rollout/kill-switch {enabled: false}` o `PATCH /admin/rollout/traffic-percentage {percentage: 0}` según severidad
+  And la decisión queda en log auditable (`system_config_audit`)
+  # Nota: auto-rollback automático (sin operador en el loop) = Fase 2 per Unit 3 NFR-R. MVP requiere acción manual del operador alertado.
 
-Scenario: Sin afectar a Oct8ne (no-regression)
-  Given Hermes está en producción con 10% del tráfico
-  When se mide la operación de Oct8ne durante esa ventana
-  Then SLA >95% en horario de Oct8ne se mantiene
-  And el equipo humano que cubre Oct8ne no reporta degradación de su flujo
+Scenario: Ramp-up controlado tras validación
+  Given los KPIs de Hermes se mantienen dentro de banda durante N días (configurable, default 7)
+  When P6 Admin o P3 Operador aprueban el ramp-up
+  Then el split se incrementa gradualmente (ej. 10% → 25% → 50% → 100%) con checkpoints en cada paso
+  And cada incremento requiere aprobación explícita (no automática) registrada en log auditable
 ```
 
 **Persona**: P6 Admin/Dev (primary); P3 Operador (primary); P7 Sponsor (beneficiary — decisión de ramp-up depende de estos datos)
@@ -598,7 +615,7 @@ Scenario: Sin afectar a Oct8ne (no-regression)
 | MH-6 — Transparencia "soy IA" | E1-S1 |
 | MH-7 — Logs auditables | E1-S6 + E2-S1 + E2-S2 + E2-S3 |
 | MH-8 — Guardrails anti-jailbreak | E1-S5 |
-| MH-9 — Convivencia Oct8ne A/B + rollback | E4-S2 |
+| MH-9 — Despliegue gradual + kill switch + rollback | E4-S2 |
 | MH-10 — Fase 0 instrumentación | E2-S4 |
 
 **Cobertura: 10/10 MH features con al menos 1 story.**

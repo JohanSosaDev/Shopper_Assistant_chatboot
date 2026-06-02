@@ -32,7 +32,7 @@
 
 **¿Cómo se construye?** Build custom sobre **Claude Haiku 4.5** vía **AWS Bedrock LATAM**, con RAG por marca, tool use sobre SFCC OCAPI/SCAPI, handoff humano de primera clase, y compliance LATAM diseñado desde día 1 (DPA Anthropic + autorización expresa).
 
-**MVP de 4 semanas**: Patprimo Colombia, chat web, **2 escenarios** — Estado de pedido (must-have) + Disponibilidad de producto (stretch goal). **Convive con Oct8ne**, no lo reemplaza.
+**MVP de 4 semanas**: Patprimo Colombia, chat web, **2 escenarios** — Estado de pedido (must-have) + Disponibilidad de producto (stretch goal). **Primer chat activo en Patprimo** (Oct8ne ya no atiende chat — solo se usa para envío batch outbound vía Excel manual; validado 2026-05-25). Despliegue gradual con kill switch para mitigar riesgo de rollout.
 
 **Inversión y ROI**:
 - **CapEx MVP**: ~COP $30–80M
@@ -82,7 +82,7 @@ Análisis cruzado de los 3 documentos en `docs/`: `internal-solution-brief.md`, 
 | 4 | **Transferencia internacional + LLM provider**: brief asume Bedrock o API directa; crítica advierte Ley 1581 + EE.UU. no es país adecuado | **3 capas obligatorias: Bedrock LATAM + DPA con Anthropic + autorización expresa en flow de chat.** |
 | 5 | **Cantidad de escenarios MVP**: brief 2 escenarios; crítica advierte que McDonald's con 3 años y partner Tier-1 no llegó | **2 escenarios pero con estructura "1 must-have + 1 stretch goal"**: Estado de pedido must-have; Disponibilidad stretch (entra si IT entrega OCAPI en semana 1). |
 | 6 | **Target conversión otras 3 marcas**: brief ≥30% al año 1; sin precedente | **Suavizado a target progresivo**: línea base mes 3, ≥15% mes 6, ≥25% mes 12. |
-| 7 | **Estado del contrato Oct8ne**: brief lo deja "por validar" | **Levantar AHORA** (acción externa al PRD). Convivencia con Oct8ne durante MVP. |
+| 7 | **Estado del contrato Oct8ne**: brief lo deja "por validar" | **Validado 2026-05-25**: Oct8ne NO atiende chat en Patprimo (solo se usa para envío batch outbound manual vía Excel; sin integración programática). Sin convivencia ni A/B contra Oct8ne. Hermes es el **primer chat activo** en Patprimo. |
 | 8 | **Existencia de Service Cloud**: brief lo deja "[POR VALIDAR]" | **Construir el PRD asumiendo "no hay Service Cloud disponible para el MVP".** Si aparece después, es upside (reduce CapEx 40–60%). |
 
 ### Vacíos críticos declarados como supuestos del PRD
@@ -128,7 +128,7 @@ Análisis cruzado de los 3 documentos en `docs/`: `internal-solution-brief.md`, 
 |---|---|---|
 | Costo del status quo proyectado 2026 | **~COP $3.9–5.1B/año** (operativo + oportunidad + expansión) | Brief §1 |
 | Ventas perdidas anuales por consultas no resueltas a tiempo | **~COP $1.0–1.4B/año** cross-grupo | Brief §1 |
-| Cobertura entre marcas | **1 de 4** (solo Patprimo con chatbot Oct8ne) | Brief §3 |
+| Cobertura entre marcas | **0 de 4** (sin chat activo en ninguna marca; Oct8ne en Patprimo solo se usa para batch outbound manual vía Excel; otras 3 marcas 100% humano) | Brief §3 (recalibrado 2026-05-25) |
 | Cobertura del calendario semanal | **~40% sin atención** | Brief §1, §3 |
 | Costo de cada nueva apertura sin automatización | **~COP $480M/año** solo en headcount (CR + Pa) | Brief §1 |
 | Volumen estimado cross-grupo | **~35–42k consultas/mes** | Brief §1 |
@@ -178,15 +178,15 @@ graph LR
 
 | # | Alternativa | Estado en PASH | Por qué insuficiente |
 |---|---|---|---|
-| 1 | **Status quo: Oct8ne + agentes humanos** | Activo en Patprimo Col; otras 3 marcas 100% humanas | No consulta datos en vivo; no cubre 3 marcas; sin 24/7; costo lineal por país |
+| 1 | **Status quo: atención humana en horario + Oct8ne solo batch outbound** | Sin chat activo en ninguna marca; Oct8ne en Patprimo solo se usa para envío batch outbound manual vía Excel (validado 2026-05-25); otras 3 marcas 100% humanas | Sin chat conversacional activo; sin 24/7; no consulta datos en vivo; costo lineal por país |
 | 2 | **Escalar el equipo humano** | Implícito si no se actúa | +COP $480M/año solo CR + Pa; no sostenible con expansión |
 | 3 | **SaaS especializado retail (Adereso, Intercom Fin, Tidio)** | No implementado | Costo por conversación crece con volumen; lock-in; limitada diferenciación per-brand |
 | 4 | **Salesforce Agentforce / Einstein** | Service Cloud asumido NO disponible (Paso 0 #8) | Requiere licencias; ata a stack propietario; menos flexible para per-brand voice. **Opción Fase 2 si llega Service Cloud** |
-| 5 | **Mejorar el árbol de Oct8ne** | Posible incrementalmente | No resuelve la contradicción operativa central: árbol no consulta SFCC en runtime |
+| 5 | **Mejorar el árbol de Oct8ne** | No aplica — Oct8ne ya no atiende chat conversacional (validado 2026-05-25) | Oct8ne solo se usa para batch outbound manual; no atiende chat customer-facing; mejorar el árbol no aporta valor al canal conversacional |
 
 > ⚠️ **Decisión crítica:** Custom build (Hermes) tiene mayor CapEx inicial pero el OpEx por conversación es ~3–5× menor a escala y la diferenciación por marca es viable. Mercado Libre, Klarna y Lyft también construyeron custom sobre LLM externo cuando llegaron a esta escala.
 
-> ⚠️ **Decisión sobre Oct8ne (Paso 0 #7):** Hermes **convive con Oct8ne durante MVP** (A/B test, no big-bang). Protege contra el anti-pattern documentado en Crítica §5.3.
+> ⚠️ **Decisión sobre Oct8ne (Paso 0 #7, validado 2026-05-25):** Oct8ne NO atiende chat en Patprimo (solo se usa para envío batch outbound manual vía Excel). Hermes es el **primer chat activo** en la marca. Estrategia de rollout: **despliegue gradual con kill switch** (split de tráfico configurable + `HERMES_ENABLED` flag con fallback a atención humana en horario), no A/B contra otro bot. Protege contra el anti-pattern documentado en Crítica §5.3.
 
 ---
 
@@ -264,7 +264,7 @@ Mujer, 29, marketing manager en Bogotá. Yoga y running serio. Athleisure premiu
 | Países activos | Colombia, Ecuador, Guatemala |
 | Países en plan 2026 | Costa Rica, Panamá |
 | Stack e-commerce | Salesforce Commerce Cloud en las 4 marcas (verificado) |
-| Stack atención hoy | Oct8ne (solo Patprimo) + atención humana en 4 canales |
+| Stack atención hoy | Sin chat conversacional activo en ninguna marca; Oct8ne en Patprimo solo para batch outbound manual vía Excel + atención humana en 4 canales (email, teléfono, redes sociales, presencial) |
 | Service Cloud / Agentforce | Asumido NO disponible para MVP |
 | DPO formal | No identificado (V4) |
 | Modelo de equipos servicio al cliente | Dedicados por marca |
@@ -311,7 +311,7 @@ Mujer, 29, marketing manager en Bogotá. Yoga y running serio. Athleisure premiu
 | "¿Reemplaza esto al equipo humano?" | No. El equipo migra de L1 repetitivo a L2/L3 + venta asistida. Mismo headcount, mayor valor por agente. |
 | "¿Cuál es el payback?" | **~6 semanas operativas.** CapEx + año 1 OpEx ~COP $158M; ahorro anual estimado ~COP $1.44B. ROI año 1 ~9×. Floor garantizado: –25%. |
 | "¿No es esto solo un experimento del programa Hardcore AI?" | POC autofinanciado, pero el path a adopción comercial está documentado (Roadmap Fase 2/3). |
-| "¿Qué pasa si Klarna se devolvió, no nos va a pasar a nosotros?" | Klarna falló por scope. Hermes mantiene convivencia con Oct8ne y handoff humano explícito desde día 1. |
+| "¿Qué pasa si Klarna se devolvió, no nos va a pasar a nosotros?" | Klarna falló por scope. Hermes mitiga con despliegue gradual + kill switch (rollback a atención humana en horario sin pérdida de servicio) y handoff humano explícito desde día 1. |
 
 ---
 
@@ -325,7 +325,7 @@ Mujer, 29, marketing manager en Bogotá. Yoga y running serio. Athleisure premiu
 
 | Dimensión | Respuesta |
 |---|---|
-| **¿Qué problema resuelve?** | La atención al cliente del grupo PASH no escala a la trayectoria 2026: 4 marcas × hasta 5 países con un modelo híbrido (Oct8ne en 1 marca + humanos en las otras 3) que no cubre 24/7, no consulta datos en vivo, y multiplica el costo lineal con cada apertura. |
+| **¿Qué problema resuelve?** | La atención al cliente del grupo PASH no escala a la trayectoria 2026: 4 marcas × hasta 5 países con un modelo de atención humana en horario en las 4 marcas (Oct8ne en Patprimo solo se usa para batch outbound manual, no atiende chat) que no cubre 24/7, no consulta datos en vivo, y multiplica el costo lineal con cada apertura. |
 | **¿Para quién?** | **Cliente final** (Grupo A — Mariana / Camilo / Andrea): respuesta <30 seg, 24/7, datos en vivo, voz de su marca. **Buyer interno** (Grupo B — CTO + CMO + Brand Managers + Compliance + CFO): plataforma única, aprovecha SFCC ya pagado, controlable, defendible ante SIC, payback ~6 semanas. |
 | **¿Cómo?** | (1) Un solo motor LLM (Claude Haiku 4.5 vía Bedrock LATAM) con N system prompts + N KBs segregadas por marca. (2) Tool layer sobre SFCC OCAPI/SCAPI invocado en runtime. (3) Handoff explícito con contexto preservado. (4) Compliance layer (PII anonymization + logs auditables + DPA + autorización expresa) cumple Ley 1581 + Circular SIC 002/2024 desde día 1. |
 
@@ -335,13 +335,13 @@ Mujer, 29, marketing manager en Bogotá. Yoga y running serio. Athleisure premiu
 
 | Competidor / Alternativa | Diferenciación de Hermes |
 |---|---|
-| **Oct8ne (status quo Patprimo)** | Oct8ne es rule-based: no consulta SFCC en runtime, no maneja variabilidad lingüística, no escala. Hermes resuelve la contradicción operativa central. Hermes **convive con Oct8ne durante MVP**, no es reemplazo big-bang. |
+| **Oct8ne (legacy Patprimo 2022-2023)** | Oct8ne fue rule-based cuando se usaba como chat (2022-2023): no consultaba SFCC en runtime, no manejaba variabilidad lingüística, no escalaba. **Validado 2026-05-25**: hoy NO atiende chat customer-facing — solo se usa para envío batch outbound manual vía Excel. Hermes es el **primer chat activo** en Patprimo (canales independientes; sin reemplazo big-bang ni A/B contra Oct8ne). |
 | **Adereso + Gemini (Falabella, Cencosud)** | Trade-off: costo por conversación crece linealmente con volumen; diferenciación per-brand limitada; lock-in. Hermes da control de tono per-brand + costo unitario decreciente con escala + portabilidad de LLM. |
 | **Salesforce Agentforce / Einstein** | Requiere licencias Service Cloud (no confirmadas). Hermes no requiere Service Cloud para el MVP. Migración a Agentforce queda como opción Fase 2. |
 | **Intercom Fin / Zendesk / Tidio** | SaaS genérico — integración SFCC custom limitada; voz de marca difícil de diferenciar; pricing per conversación no competitivo a escala; sin Bedrock LATAM ni DPA específico. |
 | **OpenAI Verdi / Klarna custom** | Arquitectura idéntica a Hermes. **Diferencia clave:** ni Klarna ni Verdi tienen multi-marca explícita. Hermes incorpora multi-personalidad por diseño desde el MVP. |
 | **Solo humanos + escalar headcount** | +COP $480M/año solo CR + Pa; no 24/7; sin efectos de escala; financieramente inviable. |
-| **Mejorar el árbol de Oct8ne** | No resuelve la contradicción central — árbol no consulta SFCC en runtime. |
+| **Mejorar el árbol de Oct8ne** | No aplica — Oct8ne ya no atiende chat conversacional (validado 2026-05-25; solo batch outbound). |
 
 ### Brecha de mercado que Hermes llena
 
@@ -360,7 +360,7 @@ quadrantChart
     quadrant-2 "Diferenciado pero superficial"
     quadrant-3 "Status quo legacy"
     quadrant-4 "Robusto pero homogéneo"
-    "Oct8ne (Patprimo actual)": [0.15, 0.30]
+    "Oct8ne (Patprimo 2022-2023, no activo)": [0.15, 0.30]
     "Tidio / Zendesk Answer Bot": [0.30, 0.25]
     "Intercom Fin": [0.55, 0.40]
     "Salesforce Agentforce / Einstein": [0.75, 0.50]
@@ -396,7 +396,7 @@ quadrantChart
 | **Trigger** | Cliente recibió correo "tu pedido fue enviado" sin actualización; abre chat web. |
 | **Pasos** | **1.** Cliente: *"¿Dónde está mi pedido #12345?"*. **2.** Bot identifica al cliente (SFCC session si auth; guest si no). **3.** Bot invoca `get_order_status(order_id, customer_id)` → SFCC OMS en runtime. **4.** Bot responde con estado + ETA + link de tracking en tono de la marca. **5.** Si confidence < threshold o sentimiento negativo → escalamiento a humano con contexto. |
 | **Resultado esperado** | Respuesta precisa en <30 seg sin esperar correo ni operador humano. |
-| **Valor medible** | • Tiempo 1ª respuesta: 3–8 min → <30 seg p50, 24/7<br>• Costo unitario: bot ~COP $500 vs humano ~COP $6.500<br>• % escaladas a humano: target 20–30% (vs 100% efectivo hoy en Oct8ne para estado pedido) |
+| **Valor medible** | • Tiempo 1ª respuesta: 3–8 min → <30 seg p50, 24/7<br>• Costo unitario: bot ~COP $500 vs humano ~COP $6.500<br>• % escaladas a humano: target 20–30% (vs 100% efectivo hoy — sin chat automatizado para estado pedido; consultas van directo a humano) |
 
 > ⚠️ **Decisión MVP:** flujo guest-friendly (# orden + email/documento) cubre ~40-60% del tráfico estimado anónimo.
 
@@ -440,7 +440,7 @@ quadrantChart
 |---|---|
 | **Actor (doble)** | (a) Cliente final frustrado o consulta compleja. (b) Agente humano que recibe el ticket. |
 | **Trigger** | (i) sentimiento negativo, (ii) complejidad fuera de scope, (iii) request explícito, (iv) confidence bajo threshold. |
-| **Pasos** | **1.** Cliente expresa frustración o solicita humano. **2.** Bot detecta señal — escala proactivamente. **3.** Bot construye paquete de contexto: historial, identidad, pedido, intento del bot, sentimiento, categoría. **4.** Transferencia al chat humano (widget Oct8ne en MVP). **5.** Humano resuelve sin pedir repetir; cierra outcome. |
+| **Pasos** | **1.** Cliente expresa frustración o solicita humano. **2.** Bot detecta señal — escala proactivamente. **3.** Bot construye paquete de contexto: historial, identidad, pedido, intento del bot, sentimiento, categoría. **4.** Notificación al equipo CX vía email/teléfono con paquete pre-cargado (MVP stub; WhatsApp Business o widget operador integrado planificado para Fase 2). **5.** Humano resuelve sin pedir repetir; cierra outcome. |
 | **Resultado esperado** | Cliente atendido en <60 seg sin repetir su historia. Humano gana tiempo y foco. |
 | **Valor medible** | • Tiempo hasta humano: <60 seg con contexto<br>• CSAT en casos escalados<br>• % contexto preservado: 100%<br>• AHT humano: –30–40% |
 
@@ -561,15 +561,15 @@ Política de retención: regulación más estricta entre jurisdicciones (Colombi
 
 **(a) Operativo:** Lanzamiento es proceso gradual con gates de promoción cuantitativos. Tres etapas:
 1. **Fase 0 — Instrumentación pre-launch**: baselines reales.
-2. **A/B test con Oct8ne durante MVP**: división de tráfico.
-3. **Rollback automático**: si conversión cae >5pp o <50% absoluto; si CSAT cae bajo baseline; si costo sube anómalo.
+2. **Despliegue gradual con kill switch durante MVP**: split de tráfico configurable + `HERMES_ENABLED` flag con fallback a "atención humana en horario" (sustituye plan original de A/B vs Oct8ne, descartado tras validación 2026-05-25 — Oct8ne no atiende chat).
+3. **Rollback automático**: si conversión cae >5pp o <50% absoluto; si CSAT cae bajo baseline; si costo sube anómalo → split a 0% Hermes (kill switch del sub-split).
 
 Promoción a 100% solo tras ≥4 semanas de datos comparativos.
 
 **(b) Interfaz:** Cliente ve un widget u otro, no ambos. Equipo interno: dashboard semanal + alertas + kill switch operable en <5 min.
 
 **(c) PROHIBIDO:**
-- ❌ Desinstalar Oct8ne durante MVP
+- ❌ Modificar el canal batch outbound de Oct8ne durante MVP (Hermes no toca ese canal — son independientes)
 - ❌ Lanzar a 100% del tráfico sin validar guardrails por ≥4 semanas
 - ❌ Recibir tráfico real antes de Fase 0 instrumentada
 - ❌ Cambiar KPIs mientras A/B esté corriendo
@@ -607,7 +607,7 @@ flowchart TD
     R -->|No| P2[P2 Handoff:<br/>escala con paquete<br/>de contexto]
     Respuesta --> Log[P7 Log auditable<br/>del turno]
     P2 --> Log
-    Log --> P6[P6 Métricas:<br/>dashboard A/B<br/>vs Oct8ne]
+    Log --> P6[P6 Métricas:<br/>dashboard despliegue gradual<br/>+ alertas KPI]
 
     style P1 fill:#fc6,color:#000
     style P2 fill:#fc6,color:#000
@@ -696,7 +696,7 @@ sequenceDiagram
 2. **Lectura de salud (P6).**
    - Tiempo 1ª respuesta: 22 seg p50, 41 seg p95 ✅
    - Costo unitario: COP $480 ✅
-   - Conversión Hermes: 53% vs Oct8ne 56% (dentro de banda)
+   - Conversión Hermes: 53% vs baseline humano-en-horario ~52% (dentro de banda; baseline Oct8ne 2022-2023 = 56% como referencia histórica)
    - CSAT: 4.2 vs baseline 4.1
    - Escalamientos: 18%
    - Guardrails violations: 0
@@ -777,7 +777,7 @@ sequenceDiagram
    └────────────────────────────────────────────────────────┘
    ```
 
-7. **Handoff vía widget Oct8ne.** En 38 segundos, Camila (agente fin de semana Atmos) ve el ticket pre-cargado con chip rojo de alerta.
+7. **Handoff vía notificación email/teléfono al equipo CX** (MVP stub; WhatsApp Business o widget operador integrado planificado Fase 2). En 38 segundos, Camila (agente fin de semana Atmos) recibe email "[ALTA] Hermes Handoff HT-2026-XXXX" con el ticket pre-cargado y chip rojo de alerta.
 
 8. **Camila decide.** Ofrece cambio + descuento del 15% en próxima compra (autorización dentro de su rango).
 
@@ -842,7 +842,7 @@ flowchart LR
 | MH-6 | **Transparencia "soy IA"** — saludo identificado + indicador visual permanente | Riesgo reputacional + posible incumplimiento CONPES 4144 |
 | MH-7 | **Logs auditables** — cada turno con timestamp, hash, intención, tools, latencia, tokens, output, sentimiento | Sin esto, no hay defensa ante reclamo SIC; no se puede iterar |
 | MH-8 | **Guardrails anti-jailbreak** — system prompt hardened + validador regex + red team previo | Sin esto, vulnerable a DPD/Chevrolet |
-| MH-9 | **Convivencia con Oct8ne en A/B** — división de tráfico + rollback automático | Sin A/B no se valida promesa de conversión; sin rollback, riesgo no mitigable |
+| MH-9 | **Despliegue gradual con kill switch** — split de tráfico configurable + `HERMES_ENABLED` con fallback automático a "atención humana en horario X" (sustituye plan original de A/B vs Oct8ne, descartado tras validación 2026-05-25 — Oct8ne no atiende chat) | Sin despliegue gradual no se valida promesa de conversión; sin kill switch, riesgo no mitigable |
 | MH-10 | **Fase 0 instrumentación pre-launch** — baseline real de KPIs + CSAT/NPS + dashboard | Sin baseline, ROI indefendible; sin dashboard, operador no opera |
 
 ### SHOULD HAVE — Stretch goals
@@ -871,7 +871,7 @@ flowchart LR
 | # | Feature excluida | Por qué fuera |
 |---|---|---|
 | WH-1 | **FAQ de políticas** | Cubierto por proyecto interno paralelo en PASH |
-| WH-2 | Reemplazo total de Oct8ne | Decisión basada en métricas post-MVP |
+| WH-2 | Reemplazo del canal batch outbound de Oct8ne | Fuera de scope MVP — canal independiente del chat conversacional de Hermes (no compite). |
 | WH-3 | Sonnet 4.6 fallback automático | MVP simplifica a Haiku único |
 | WH-4 | Análisis sentimiento con clasificador entrenado | MVP usa heurística |
 | WH-5 | Otras 3 marcas (Seven Seven, Ostu, Atmos) | Fase 2 |
@@ -897,7 +897,7 @@ gantt
     section Semana 1 - Setup
     MH-5 Compliance (Bedrock + DPA)   :a1, 2026-05-18, 5d
     MH-7 Logs auditables base         :a2, 2026-05-18, 3d
-    MH-9 Convivencia Oct8ne setup     :a3, 2026-05-19, 4d
+    MH-9 Despliegue gradual setup     :a3, 2026-05-19, 4d
     MH-10 Fase 0 instrumentación      :a4, 2026-05-18, 7d
 
     section Semana 2 - Core
@@ -976,7 +976,7 @@ flowchart TB
 | Rol | Quién es | Acceso |
 |---|---|---|
 | **Cliente final** | Compradores de las 4 marcas | Widget de chat embebido |
-| **Agente humano** | Equipo CX dedicado por marca | Widget Oct8ne con paquete de contexto |
+| **Agente humano** | Equipo CX dedicado por marca | Notificación email/teléfono con paquete de contexto (MVP stub); widget operador integrado planificado Fase 2 (WhatsApp Business o Service Cloud) |
 | **Operador / CX Lead** | Operador-curador del bot (Daniela) | Dashboard del operador + KB editor |
 | **Brand Manager** | Responsable de marca (1 por marca) | Visor de muestras + sign-off |
 | **Compliance / DPO** | Responsable Habeas Data | Dashboard de compliance + logs auditables |
@@ -1029,7 +1029,7 @@ flowchart TB
 
 ### M5 — Módulo de Handoff a Humano
 
-**Features:** Detección de triggers (confidence, sentimiento, intención, request explícito); construcción del paquete de contexto; transferencia al widget Oct8ne (MVP); preparado para Service Cloud en Fase 2; botón "Hablar con persona" persistente.
+**Features:** Detección de triggers (confidence, sentimiento, intención, request explícito); construcción del paquete de contexto; notificación email/teléfono al equipo CX con paquete pre-cargado (MVP stub); preparado para WhatsApp Business y/o Service Cloud en Fase 2; botón "Hablar con persona" persistente.
 
 **Roles:** Cliente (activa), Agente humano (recibe), Operador (audita).
 
@@ -1092,7 +1092,7 @@ Una conversación cuenta como "resolución útil" cuando:
 
 | Punto | Valor | Comentario |
 |---|---|---|
-| Baseline Oct8ne Patprimo (Fase 0) | **TBD** | Muestra de 200 conversaciones histórico Oct8ne (V3) |
+| Baseline Patprimo (Fase 0) | **TBD** | Muestra de 200 tickets humanos histórico Patprimo (canal email/teléfono/redes) + dataset Oct8ne 2022-2023 (cuando atendía chat) como referencia secundaria histórica (V3) |
 | Target MVP semana 4 (Demo Day) | **≥40%** | Conservador — curva inicial |
 | Target mes 3 | **≥60%** | Equivalente a Klarna 66% mes 1, ajustado por scope |
 | Target mes 6 (Fase 2) | **≥70%** | Con 3 marcas más + WhatsApp |
@@ -1106,7 +1106,7 @@ Una conversación cuenta como "resolución útil" cuando:
 |---|---|---|---|---|
 | A1 | Chat Open Rate (COR) | TBD | ≥10% del tráfico Patprimo | ≥15% |
 | A2 | First Turn Engagement | TBD | ≥75% | ≥85% |
-| A3 | Bot Pickup Rate vs. Oct8ne (en A/B) | n/a | ≥45% se queda con Hermes | ≥70% |
+| A3 | Bot Pickup Rate vs. fallback humano (en despliegue gradual) | n/a | ≥45% se queda con Hermes | ≥70% |
 | A4 | Guest Identification Success Rate | TBD | ≥80% | ≥90% |
 
 #### 🔵 Retención
@@ -1124,10 +1124,10 @@ Una conversación cuenta como "resolución útil" cuando:
 |---|---|---|---|---|
 | Q1 ★ | Tiempo 1ª respuesta (p50) | 3-8 min en horario; 12-24h fuera | <30 seg p50, <60 seg p95, 24/7 | mantener |
 | Q2 ★ | Costo unitario por consulta | ~COP $6.500 | ~COP $2.500 (-60%); floor -25% | -60% sostenido |
-| Q3 ★ | Conversión vía chat (Patprimo) | 50-60% (Oct8ne) | mantener ≥50% (no regresión) | superar 60% |
-| Q4 | CSAT post-conversación | TBD baseline Oct8ne | ≥ baseline | +0.5 vs baseline |
+| Q3 ★ | Conversión vía chat (Patprimo) | 50-60% (Oct8ne 2022-2023, referencia histórica; sin chat activo desde 2024) | ≥50% (referencia histórica; sin regresión vs ese benchmark) | superar 60% |
+| Q4 | CSAT post-conversación | TBD baseline tickets humanos + Oct8ne 2022-2023 ref histórica | ≥ baseline | +0.5 vs baseline |
 | Q5 | First Contact Resolution | TBD | ≥60% | ≥80% |
-| Q6 | % conversaciones escaladas a humano | ~100% en consultas dinámicas Oct8ne | ≤30% | ≤20% |
+| Q6 | % conversaciones escaladas a humano | ~100% en consultas dinámicas hoy (sin chat conversacional activo; humanos resuelven todo) | ≤30% | ≤20% |
 | Q7 | NPS del chat | TBD | n/a | ≥+25 |
 | Q8 | % gasto en tokens vs presupuesto | n/a | ≤100% | ≤85% |
 
@@ -1171,7 +1171,7 @@ Una conversación cuenta como "resolución útil" cuando:
 | 1 | **TRU (North Star)** | Captura eficiencia + calidad + impacto en uno |
 | 2 | **Conversión chat Patprimo** | Guardrail comercial |
 | 3 | **Costo unitario por consulta** | Lo que CFO pregunta primero |
-| 4 | **CSAT vs. baseline Oct8ne** | Guardrail experiencia |
+| 4 | **CSAT vs. baseline humanos + Oct8ne 2022-2023 ref histórica** | Guardrail experiencia |
 
 ### Estructura jerárquica
 
@@ -1256,7 +1256,7 @@ flowchart LR
 
 | Tipo | Cantidad | Fuente |
 |---|---|---|
-| Conversaciones reales Oct8ne | 150 | Histórico (validar acceso contractual) |
+| Conversaciones reales Oct8ne 2022-2023 | 150 | Histórico cuando Oct8ne atendía chat conversacional (validar acceso al backup; no aplica a operación actual de Oct8ne, que es batch outbound) |
 | Tickets humanos cross-canal | 50 | Email, WhatsApp, teléfono escalado |
 | Casos sintéticos Caso 1 | 50 | Generados con variaciones |
 | Casos sintéticos Caso 2 | 30 | Generados (stock/sin stock/talla/multi-producto) |
@@ -1416,7 +1416,7 @@ quadrantChart
 #### R-9 Degradación de conversión chat Patprimo — Producto
 
 - **Probabilidad:** Media. **Impacto:** Alto.
-- **Mitigación:** A/B con Oct8ne desde día 1; rollback automático si Q3 cae >5pp o <50% absoluto; SH-1 Caso 2 funcional; co-diseño con ventas online; tools de "ofrecer producto" + "add-to-cart".
+- **Mitigación:** Despliegue gradual con kill switch desde día 1 (split configurable + `HERMES_ENABLED` con fallback humano-en-horario); alertas (Slack/email) al operador si Q3 cae >5pp o <50% absoluto → operador ejecuta rollback manual via `PATCH /admin/rollout/kill-switch` o `PATCH /admin/rollout/traffic-percentage` (auto-rollback automático sin operador en el loop = Fase 2 per Unit 3 NFR-R); SH-1 Caso 2 funcional; co-diseño con ventas online; tools de "ofrecer producto" + "add-to-cart".
 - **Métrica:** Q3 (semanal) + alerta de rollback.
 - **Owner:** Operador + CMO co-sponsor.
 
@@ -1536,7 +1536,7 @@ timeline
 |---|---|
 | Extensión a las otras 3 marcas en Colombia | Iniciar discovery con Brand Managers Seven Seven, Ostu, Atmos en septiembre |
 | WhatsApp Business como 2º canal | Setup técnico en septiembre; lanzamiento mes 5-6 |
-| Decisión sobre Oct8ne | Si Hermes supera por 4 semanas → plan de transición; si parejos → A/B 2 meses más |
+| Decisión sobre Oct8ne batch outbound | Fuera de scope Hermes — canal independiente (no compite con el chat conversacional). Sin transición necesaria. |
 | Migración a Salesforce Agentforce | Re-evaluar con Compliance; depende de adopción Service Cloud |
 | Devolución automatizada (Caso 3) | Iniciar discovery legal en septiembre; lanzamiento mes 6-7 |
 
@@ -1595,7 +1595,8 @@ timeline
 
 | Término | Definición |
 |---|---|
-| **A/B test** | Comparación controlada entre dos versiones (en este caso Hermes vs. Oct8ne) con división de tráfico explícita. |
+| **A/B test** | Comparación controlada entre dos versiones con división de tráfico explícita. *No aplicado en MVP — ver **Despliegue Gradual con Kill Switch** (Oct8ne no atiende chat; validado 2026-05-25).* |
+| **Despliegue Gradual con Kill Switch** | Estrategia de rollout del MVP: split de tráfico configurable + `HERMES_ENABLED` flag. Los clientes que ven Hermes son determinísticos por hash; los demás ven el flujo previo (atención humana en horario o mensaje informativo). El kill switch global revierte 100% del tráfico al fallback en <1 min si hay incidente crítico. Reemplaza el plan original de A/B vs Oct8ne tras validación 2026-05-25. |
 | **Bedrock LATAM** | AWS Bedrock con región configurada en Brasil o Chile para garantizar residencia regional de datos. |
 | **Brand Manager** | Responsable de la marca con poder de veto sobre comunicaciones públicas de su marca. |
 | **CONPES 4144** | Política Nacional de Inteligencia Artificial de Colombia, aprobada 14 feb 2025. |

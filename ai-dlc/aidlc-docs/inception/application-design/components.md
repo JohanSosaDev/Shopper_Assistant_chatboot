@@ -67,14 +67,14 @@ TypeScript + Node ≥20 + Fastify (monolithic plugin pattern) + Postgres (pg dri
 - **Principles visibles**: P4, P5, P7.
 
 ### M5 — Human Handoff
-- **Purpose**: Detectar triggers de handoff; construir paquete de contexto; transferir al widget Oct8ne.
-- **Responsibilities**: Evaluar sentimiento, intención, request explícito, confidence; construir payload con identidad + histórico + sentimiento + intento del bot + categoría sugerida; entregar al widget Oct8ne vía su API/event-bridge; persistir audit log del handoff.
+- **Purpose**: Detectar triggers de handoff; construir paquete de contexto; despachar notificación al equipo CX vía email/teléfono (MVP stub; WhatsApp Business o Salesforce Service Cloud planificados como targets alternativos para Fase 2).
+- **Responsibilities**: Evaluar sentimiento, intención, request explícito, confidence; construir payload con identidad + histórico + sentimiento + intento del bot + categoría sugerida; despachar notificación al equipo CX (pipeline `TriggerDetector → PackageBuilder → DeliveryAdapter` en Unit 3 NFR-D; DeliveryAdapter usa nodemailer + mailhog en dev / SMTP real en Fase 2); persistir audit log del handoff (tabla `handoff_tickets` con `handoffTicketId` formato `HT-2026-XXXX`).
 - **Public interface**:
   ```ts
   interface IHandoffService {
     evaluateTrigger(ctx: TurnContext): HandoffDecision;
     buildContextPackage(conversationId: ConversationId): Promise<HandoffPayload>;
-    transferToOct8ne(payload: HandoffPayload): Promise<HandoffResult>;
+    dispatchHandoff(payload: HandoffPayload): Promise<HandoffResult>; // notifica al equipo CX vía email/teléfono (MVP); sustituye transferToOct8ne() original
   }
   ```
 - **Stories cubiertas**: E3-S1, E3-S2, E3-S3, E3-S4.
@@ -121,9 +121,9 @@ TypeScript + Node ≥20 + Fastify (monolithic plugin pattern) + Postgres (pg dri
 - **Stories cubiertas**: E1-S6, E2-S1, E2-S2, E2-S3, E2-S4.
 - **Principles visibles**: P3, P6, P7.
 
-### M8 — Brand Configuration
-- **Purpose**: Repositorio de configs por marca (system prompt, few-shot, tono, identidad customer-facing); sign-off del Brand Manager; A/B routing config.
-- **Responsibilities**: CRUD de configs versionadas; gate de activación con sign-off auditable; expose config por marca al runtime de M1; gestionar la regla de split A/B Hermes vs Oct8ne.
+### M8 — Brand Configuration & Rollout Gate
+- **Purpose**: Repositorio de configs por marca (system prompt, few-shot, tono, identidad customer-facing) con sign-off del Brand Manager; RolloutGate (kill switch global + traffic %) para despliegue gradual de Hermes.
+- **Responsibilities**: CRUD de configs versionadas; gate de activación con sign-off auditable; expose config por marca al runtime de M1; gestionar el RolloutGate de Hermes vs fallback humano (split de tráfico configurable + kill switch global; persistencia en `system_config` con `rollout_salt`). *Auto-rollback automático por degradación de KPI = Fase 2 per Unit 3 NFR-R; MVP usa alerting + acción manual del operador.*
 - **Public interface**:
   ```ts
   interface IBrandConfigService {
@@ -135,11 +135,12 @@ TypeScript + Node ≥20 + Fastify (monolithic plugin pattern) + Postgres (pg dri
     rollback(brand: BrandId): Promise<BrandConfigVersion>;
   }
 
-  interface IABRoutingService {
-    decideBot(req: ABDecisionInput): "hermes" | "oct8ne";
-    getCurrentSplit(): Promise<ABSplitConfig>;
-    setSplit(config: ABSplitConfig, actor: ActorIdentity): Promise<void>;
-    autoRollback(rule: ABRollbackRule): Promise<RollbackEvent>;
+  interface IRolloutGate {
+    shouldServeHermes(identifier: string): Promise<boolean>; // hash sha256(id + rollout_salt) % 100 < traffic_pct; kill switch absoluto si hermes_enabled=false
+    getCurrentConfig(): Promise<RolloutConfig>;
+    setTrafficPercentage(percentage: number, actor: ActorIdentity, reason: string): Promise<void>;
+    setKillSwitch(enabled: boolean, actor: ActorIdentity, reason: string): Promise<void>;
+    // auto-rollback automático = Fase 2; MVP usa AlertingService + acción manual del operador
   }
   ```
 - **Stories cubiertas**: E4-S1, E4-S2.
@@ -181,7 +182,7 @@ TypeScript + Node ≥20 + Fastify (monolithic plugin pattern) + Postgres (pg dri
 | M5 Handoff | — | — | ✅ Primary |
 | M6 Compliance | ✅ Primary | — | — |
 | M7 Observability | ✅ Primary | — | — |
-| M8 Brand Configuration | — | ✅ Primary | ✅ Primary (A/B routing) |
+| M8 Brand Configuration + RolloutGate | — | ✅ Primary (Brand CRUD) | ✅ Primary (RolloutGate + kill switch + traffic %) |
 | CC-1..4 Infraestructura | ✅ Primary | — | — |
 
 ---

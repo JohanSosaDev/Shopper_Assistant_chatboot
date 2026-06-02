@@ -164,7 +164,13 @@ interface TurnRecord {
 interface IHandoffService {
   evaluateTrigger(ctx: TurnContext): HandoffDecision;
   buildContextPackage(conversationId: ConversationId): Promise<HandoffPayload>;
-  transferToOct8ne(payload: HandoffPayload): Promise<HandoffResult>;
+  /** Despacha notificación al equipo CX vía email/teléfono (MVP stub).
+   *  Unit 3 NFR-D lo descompone en pipeline: TriggerDetector → PackageBuilder → DeliveryAdapter.
+   *  DeliveryAdapter usa nodemailer + mailhog en dev; SMTP real Fase 2.
+   *  WhatsApp Business o Salesforce Service Cloud como targets alternativos Fase 2.
+   *  Sustituye `transferToOct8ne()` original tras validación 2026-05-25 (Oct8ne no atiende chat).
+   */
+  dispatchHandoff(payload: HandoffPayload): Promise<HandoffResult>;
 }
 
 interface TurnContext {
@@ -200,8 +206,9 @@ interface HandoffPayload {
 }
 
 interface HandoffResult {
-  oct8neTicketId: string;
-  transferredAt: Iso8601;
+  handoffTicketId: string; // formato HT-2026-XXXX, generado por Hermes (no por Oct8ne)
+  dispatchedAt: Iso8601;
+  deliveryChannel: "email" | "phone" | "whatsapp" | "service_cloud"; // MVP: "email" o "phone"; resto Fase 2
   estimatedAgentResponseSeconds?: number;
 }
 ```
@@ -308,7 +315,7 @@ interface AlertRule {
 
 ---
 
-## M8 — Brand Configuration & A/B Routing
+## M8 — Brand Configuration & Rollout Gate
 
 ```ts
 interface IBrandConfigService {
@@ -332,33 +339,32 @@ interface BrandConfig {
   approvedBy: ApproverIdentity;
 }
 
-interface IABRoutingService {
-  decideBot(req: ABDecisionInput): "hermes" | "oct8ne";
-  getCurrentSplit(): Promise<ABSplitConfig>;
-  setSplit(config: ABSplitConfig, actor: ActorIdentity): Promise<void>;
-  autoRollback(rule: ABRollbackRule): Promise<RollbackEvent | null>;
+interface IRolloutGate {
+  /** Determinístico: `hash_sha256(identifier + rollout_salt) % 100 < hermes_traffic_percentage`.
+   *  Si `hermes_enabled=false` (kill switch global) → siempre `false` (independiente del %).
+   *  Cache in-memory 60s para hot path del widget (R-ROLL-* en Unit 3 NFR-R).
+   *  Sustituye `IABRoutingService.decideBot()` original tras validación 2026-05-25 (Oct8ne no atiende chat —
+   *  el "otro lado" del split no es otro bot sino el fallback humano-en-horario / mensaje informativo).
+   */
+  shouldServeHermes(identifier: string): Promise<boolean>;
+  getCurrentConfig(): Promise<RolloutConfig>;
+  setTrafficPercentage(percentage: number, actor: ActorIdentity, reason: string): Promise<void>;
+  setKillSwitch(enabled: boolean, actor: ActorIdentity, reason: string): Promise<void>;
 }
 
-interface ABDecisionInput {
-  brand: BrandId;
-  sessionId: string;
-  customerIdHash?: CustomerIdHash;
+interface RolloutConfig {
+  hermesEnabled: boolean; // kill switch global; `false` ⇒ shouldServeHermes() siempre `false`
+  hermesTrafficPercentage: number; // 0–100; % de identificadores admitidos cuando hermesEnabled=true
+  rolloutSalt: Buffer; // 32 bytes generados en migration; cambiar redistribuye buckets
+  handoffStubMessage: string; // mensaje mostrado al cliente al activar handoff
+  lastUpdatedAt: Iso8601;
+  lastUpdatedBy: ActorIdentity;
 }
 
-interface ABSplitConfig {
-  brand: BrandId;
-  hermesPercent: number; // 0–100
-  effectiveFrom: Iso8601;
-  setBy: ActorIdentity;
-}
-
-interface ABRollbackRule {
-  metric: "conversion_rate" | "first_response_p95_ms" | "guardrail_violations";
-  threshold: number;
-  comparator: "lt" | "gt";
-  windowMin: number;
-  rollbackToSplit: ABSplitConfig;
-}
+// NOTA: auto-rollback automático por degradación de KPI = Fase 2 per Unit 3 NFR-R.
+// MVP usa AlertingService (cada 1 min) → operador alertado vía Slack/email → acción manual:
+//   - `setKillSwitch(false, ...)` para rollback total al fallback humano, o
+//   - `setTrafficPercentage(0, ...)` para sub-rollback granular.
 ```
 
 ---

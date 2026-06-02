@@ -20,10 +20,10 @@
 | E2-S4 — Fase 0 instrumentación baseline | P3 Operador; P6 Admin/Dev | E2 Operations | **Unit 1** | Es **meta-instrumentación pre-launch** — captura baseline del modelo actual. Necesita el LoggerService (Unit 1) operativo para reusar el mismo data lake. |
 | E3-S1 — Detección triggers de handoff | P6 Admin/Dev | E3 Human Handoff | **Unit 3** | M5 — core del handoff. |
 | E3-S2 — Construcción paquete contexto | P2 Agente humano | E3 Human Handoff | **Unit 3** | M5 — depende de M3 `getOrderHistory` y M6 `anonymizePII` (integration points IP-2, IP-3). |
-| E3-S3 — Transferencia operativa Oct8ne | P6 Admin/Dev | E3 Human Handoff | **Unit 3** | M5 — integración con widget Oct8ne. |
+| E3-S3 — Transferencia operativa al equipo CX (email/teléfono) | P6 Admin/Dev | E3 Human Handoff | **Unit 3** | M5 — pipeline DeliveryAdapter (nodemailer + mailhog en dev; SMTP real en Fase 2). Sustituye el plan original "widget Oct8ne" tras validación 2026-05-25. |
 | E3-S4 — Botón "Hablar con persona" persistente | P1 Cliente final | E3 Human Handoff | **Unit 3** | M5 — coordinación con frontend widget (depende de OD-5). |
 | E4-S1 — Voz Patprimo + sign-off Brand Manager | P4 Brand Manager | E4 Cross-cutting | **Unit 2** | M8 CRUD + sign-off + versioning + rollback. **Story gruesa** que cubre MH-3 completo. |
-| E4-S2 — Convivencia A/B Oct8ne + rollback | P6 Admin/Dev; P3 Operador | E4 Cross-cutting | **Unit 3** | M8 A/B routing. Depende del brand config de Unit 2 + del orquestador de Unit 1. |
+| E4-S2 — Despliegue gradual con kill switch | P6 Admin/Dev; P3 Operador | E4 Cross-cutting | **Unit 3** | M8 reformulado (`RolloutGate.shouldServeHermes()` + `system_config` con kill switch + traffic %). Depende del brand config de Unit 2 + del orquestador de Unit 1. Sustituye el plan original "A/B vs Oct8ne" tras validación 2026-05-25. |
 
 ---
 
@@ -54,7 +54,7 @@
 | MH-6 | Transparencia "soy IA" | E1-S1 → **Unit 1** |
 | MH-7 | Logs auditables | E1-S6 (write, Unit 1) + E2-S1, S2, S3 (read, Unit 3) |
 | MH-8 | Guardrails anti-jailbreak | E1-S5 → **Unit 1** |
-| MH-9 | Convivencia Oct8ne A/B + rollback | E4-S2 → **Unit 3** |
+| MH-9 | Despliegue gradual + kill switch | E4-S2 → **Unit 3** |
 | MH-10 | Fase 0 instrumentación | E2-S4 → **Unit 1** |
 
 **Cross-unit MH features** (las 2 que cruzan):

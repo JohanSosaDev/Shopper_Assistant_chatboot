@@ -72,7 +72,7 @@ Los 10 features Must Have del PRD están dentro del alcance de esta iteración A
 | MH-6 | Transparencia "soy IA" — saludo identificado + indicador visual permanente | M1 + M6 |
 | MH-7 | Logs auditables — turno con timestamp, hash, intención, tools, latencia, tokens, output, sentimiento | M7 |
 | MH-8 | Guardrails anti-jailbreak — system prompt hardened + validador regex + red team previo | M1 |
-| MH-9 | Convivencia con Oct8ne en A/B — división de tráfico + rollback automático | M5 + M7 |
+| MH-9 | Despliegue gradual con kill switch — split de tráfico configurable + fallback automático a "atención humana en horario" (sustituye A/B vs Oct8ne; ver blocker resuelto 2026-05-25) | M5 + M7 |
 | MH-10 | Fase 0 instrumentación pre-launch — baseline real de KPIs + CSAT/NPS + dashboard | M7 + M10 (instrumentación) |
 
 > **Trade-off TO-1 (PRD §8):** Caso 2 (disponibilidad + add-to-cart) — Should Have, fuera del alcance MUST HAVE de esta iteración. Si IT entrega OCAPI Inventory en semana 1, puede promoverse en una iteración futura.
@@ -192,7 +192,7 @@ Aplican las 15 reglas SECURITY-01 a SECURITY-15 como **blocking constraints**. L
 ### 7.2 Constraints
 
 - **Compliance**: inferencia regional Bedrock LATAM obligatoria (no us-east-1, no eu-west-1).
-- **Convivencia Oct8ne**: A/B con rollback automático; no reemplazo.
+- **Despliegue gradual**: split de tráfico configurable + kill switch (`HERMES_ENABLED`) con fallback a "atención humana en horario X". Oct8ne (validado 2026-05-25: solo se usa para envío batch outbound vía Excel manual, sin chat activo) NO es target de integración, A/B ni handoff.
 - **PRD §6 P3**: aislamiento de configuración por marca aun cuando MVP solo usa Patprimo.
 - **Workspace layout (Q6 = C)**: el código vive en `hermes/` (hermano de `ai-dlc/`), no dentro de `ai-dlc/`.
 
@@ -230,7 +230,7 @@ Esta iteración define 3 unidades. Dado que el alcance es **MUST HAVE únicament
 | 2 | **Knowledge & Brand Voice** | M2 + M8 (partial) | MH-3 (config Patprimo, sin RAG denso) | **Implementación parcial** — solo config por marca, sin RAG denso (no requerido para Caso 1) |
 | 3 | **Handoff & Convivencia** | M5 + M8 + M9 (instrumentación A/B) | MH-4, MH-9 | **Implementación completa** |
 
-> **Justificación del orden**: Unit 1 entrega MVP funcional sin depender de las otras. Unit 2 carga la voz de Patprimo (necesaria para experiencia de marca). Unit 3 cierra el loop con handoff y A/B vs Oct8ne (sin esto, MVP no es deployable a producción).
+> **Justificación del orden**: Unit 1 entrega MVP funcional sin depender de las otras. Unit 2 carga la voz de Patprimo (necesaria para experiencia de marca). Unit 3 cierra el loop con handoff stub (notificación email/teléfono al equipo CX) y despliegue gradual con kill switch (sin esto, MVP no es deployable a producción).
 
 ---
 
@@ -244,7 +244,7 @@ Esta iteración define 3 unidades. Dado que el alcance es **MUST HAVE únicament
 | OD-4 | Bibliotecas de validación de input (Zod, Yup, Ajv) | Application Design |
 | OD-5 | Frontend del widget chat (embed-only? React component? Vanilla?) | Application Design |
 | OD-6 | Estructura específica de tests (Vitest? Jest? Playwright para e2e?) | NFR Design |
-| OD-7 | Estrategia de A/B con Oct8ne (proxy a nivel de widget? feature flag?) | Functional Design Unit 3 |
+| OD-7 | Estrategia de despliegue gradual (feature flag + split configurable) y handoff target MVP | Functional Design Unit 3 — **CERRADA 2026-05-25** tras resolución blocker Oct8ne: split en backend + `HERMES_ENABLED` kill switch; handoff stub vía notificación email/teléfono al equipo CX; WhatsApp Business como target Fase 2 |
 | OD-8 | CI/CD pipeline detalle (GitHub Actions workflows específicos) | Build and Test |
 
 ---

@@ -39,7 +39,7 @@ DB driver:       pg (raw driver) — sin ORM
 Migrations:      node-pg-migrate (a confirmar en NFR Design / Code Gen)
 LLM SDK:         @anthropic-ai/bedrock-sdk
 LLM modelo:      Claude Haiku 4.5 vía Bedrock LATAM
-Tools HTTP:      undici (decisión final Code Gen) para SFCC + Oct8ne
+Tools HTTP:      undici (decisión final Code Gen) para SFCC; nodemailer para handoff via email (M5)
 Background jobs: node-cron / setInterval (in-process)
 Logger:          pino (estándar Fastify; estructurado JSON)
 Container:       Docker Compose (app + postgres)
@@ -81,11 +81,14 @@ hermes/
 │   │   └── request-context.plugin.ts    # CC-3
 │   ├── controllers/                     # HTTP handlers (layer: input)
 │   │   ├── chat.controller.ts
-│   │   ├── ab.controller.ts
+│   │   ├── widget-config.controller.ts    # público; RolloutGate decision (Unit 3)
 │   │   ├── admin/
 │   │   │   ├── dashboard.controller.ts
 │   │   │   ├── brand-config.controller.ts
-│   │   │   └── compliance.controller.ts
+│   │   │   ├── compliance.controller.ts
+│   │   │   ├── rollout.controller.ts      # kill switch + traffic % (rol admin)
+│   │   │   ├── handoff-tickets.controller.ts
+│   │   │   └── alerts.controller.ts
 │   │   └── health.controller.ts
 │   ├── services/                        # business logic
 │   │   ├── conversation.service.ts
@@ -98,14 +101,15 @@ hermes/
 │   │   ├── dashboard.service.ts
 │   │   ├── alerting.service.ts
 │   │   ├── brand-config.service.ts
-│   │   └── ab-routing.service.ts
+│   │   └── rollout-gate.service.ts
 │   ├── repositories/                    # data access (sql + pg)
 │   │   ├── session.repo.ts
 │   │   ├── consent.repo.ts
 │   │   ├── turn-log.repo.ts
 │   │   ├── handoff-log.repo.ts
 │   │   ├── brand-config.repo.ts
-│   │   └── ab-split.repo.ts
+│   │   ├── system-config.repo.ts          # rollout config + audit (Unit 3)
+│   │   └── handoff-tickets.repo.ts
 │   ├── models/                          # Zod schemas + TS types derivados
 │   │   ├── conversation.ts
 │   │   ├── identity.ts
@@ -128,8 +132,7 @@ hermes/
 │   └── jobs/                            # background jobs
 │       ├── session-cleanup.job.ts
 │       ├── retention.job.ts
-│       ├── ab-rollback.job.ts
-│       └── alert-evaluator.job.ts
+│       └── alert-evaluator.job.ts        # auto-rollback por KPI = Fase 2; MVP usa alerting + acción manual
 └── tests/
     ├── unit/                            # vitest, mocked deps
     ├── integration/                     # vitest + supertest contra Fastify app
@@ -151,7 +154,7 @@ hermes/
 | M5 Handoff | — | — | ✅ Primary |
 | M6 Compliance | ✅ Primary (PII + consent) | — | ⊡ PII anon en handoff log |
 | M7 Observability | ✅ Primary (logger + base dashboard) | — | ⊡ dashboards adicionales |
-| M8 Brand Configuration | — | ✅ Primary (config Patprimo) | ✅ Primary (A/B routing) |
+| M8 Brand Configuration + RolloutGate | — | ✅ Primary (config Patprimo CRUD) | ✅ Primary (RolloutGate + kill switch + traffic %) |
 | CC-1..4 Infraestructura | ✅ Primary | — | — |
 
 **Unit 1 entrega Caso 1 end-to-end demo-able sin depender de Units 2 y 3** (con un brand_config seed hard-coded como bootstrap).
@@ -164,7 +167,7 @@ hermes/
 |---|---|---|
 | **Logging** | `pino` configurado en CC-1; cada request lleva `request_id` y `conversation_id` vía CC-3 | M7 |
 | **Error handling** | `fastify.setErrorHandler` global; errores tipados con clase base `HermesError` | CC-2 |
-| **Authentication** | Endpoints `/chat` y `/ab/decide` son públicos con consent gate; endpoints admin requieren JWT validado server-side por middleware | M6 + plugin admin |
+| **Authentication** | Endpoints `/chat` y `/widget/config` son públicos con consent gate; endpoints admin requieren JWT validado server-side por middleware (incluye `/admin/rollout/*` con rol `admin` solo, per Unit 3 NFR-R) | M6 + plugin admin |
 | **PII handling** | M6 expone `anonymizePII()`; toda escritura a logs pasa por allí; PII en cleartext nunca persiste | M6 |
 | **Rate limiting** | Plugin `@fastify/rate-limit` en `/chat` (e.g. 30 req/min por IP); throttling en admin | CC plugin |
 | **CORS** | Restringido a `https://patprimo.com.co` (y otros origins SFCC); definido en plugin CORS | CC plugin |
@@ -179,8 +182,8 @@ hermes/
 Ver `services.md` para diagramas detallados.
 
 1. **Turno happy path Caso 1** — 11 pasos sync: Cliente → Controller → Validation Zod → ConversationService → SessionService (identity) → ComplianceService (consent gate) → BrandConfigService (load Patprimo) → Bedrock invoke (LLM) → SFCCToolset.getOrderStatus → Bedrock invoke (con tool result) → guardrails → log → response.
-2. **Handoff** — 7 pasos: Trigger detectado → buildContextPackage → getConversation history → anonymizePII para log → transferToOct8ne → logHandoff → respond "te paso con una persona".
-3. **A/B routing** — stateless por request: hash(sessionId) mod 100 < hermesPercent → 'hermes'; else 'oct8ne'. Job de rollback corre cada 5 min evaluando reglas.
+2. **Handoff** — 7 pasos: Trigger detectado → buildContextPackage → getConversation history → anonymizePII para log → dispatchHandoff (notificación email/teléfono al equipo CX vía nodemailer; MVP stub) → logHandoff → respond "Un asesor humano te contactará en X min/horas".
+3. **Rollout Gate** — stateless por request: si `hermes_enabled=false` (kill switch global) → fallback humano-en-horario; sino `hash_sha256(sessionId + rollout_salt) % 100 < hermes_traffic_percentage` → 'hermes', else fallback. Cache in-memory 60s en RolloutGate. *Auto-rollback automático por degradación de KPI = Fase 2 per Unit 3 NFR-R; MVP usa AlertingService cada 1 min → operador alertado vía Slack/email → acción manual del operador.*
 
 ---
 
@@ -226,5 +229,5 @@ Ver `services.md` para diagramas detallados.
 |---|---|---|
 | OD-5 Frontend widget | Pending | Functional Design Unit 1 |
 | OD-6 Tests stack | Pending (Vitest sugerido) | NFR Design / Build and Test |
-| OD-7 Estrategia A/B Oct8ne (proxy vs feature flag) | Pending — diseñado a alto nivel | Functional Design Unit 3 |
+| OD-7 Estrategia despliegue gradual + handoff target MVP | **CERRADA 2026-05-25** — Despliegue gradual con kill switch (`HERMES_ENABLED` + `hermes_traffic_percentage` en `system_config`) en backend; handoff stub vía notificación email/teléfono al equipo CX (nodemailer + mailhog en dev); WhatsApp Business y/o Salesforce Service Cloud planificados como targets alternativos Fase 2. Sustituye plan original "A/B vs Oct8ne" tras validación blocker Oct8ne (no atiende chat — solo batch outbound). | Functional Design Unit 3 |
 | OD-8 CI/CD pipeline detalle | Pending | Build and Test |

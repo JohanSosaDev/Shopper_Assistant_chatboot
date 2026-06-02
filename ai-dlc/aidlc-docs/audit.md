@@ -536,3 +536,77 @@ Complete chronological record of all user inputs, AI responses, and stage decisi
 **Context**: 🏁 Fin del workflow AI-DLC para Hermes MVP. Pendientes diferidos (sin bloqueante): Code Generation U1/U2/U3 + refactor de stories.md + prd.md por Oct8ne OUT.
 
 ---
+
+## Refactor coherencia documental Oct8ne — Iniciado
+**Timestamp**: 2026-06-01T00:00:00Z
+**User Input**: "Vamos hacer el refactor de coherencia documental Oct8ne para salir de eso"
+**AI Response**: Mapeo de alcance — 34 archivos mencionan Oct8ne; categorizados en: A) Canónicos (PRDs + stories + requirements + personas), B) Application Design derivados (8 docs), C) Construction Unit 3 (ya post-resolución, no tocar), D) Append-only (`audit.md`, `blockers/oct8ne-validation-pending.md`). Presento plan por fases con checkpoints + reabro decisión handoff target (4 opciones del blocker §3 recalibradas con contexto Demo Day 2026-06-09 a 8 días + 0% código).
+**Context**: Pendiente diferido del workflow AI-DLC tras resolución del blocker Oct8ne (2026-05-25). Refactor necesario antes de presentar a CTO.
+
+---
+
+## Refactor Oct8ne — Decisiones del usuario
+**Timestamp**: 2026-06-01T00:05:00Z
+**User Input**: AskUserQuestion respondidas:
+- "¿Cómo ejecutamos el refactor?" = **"Por fases con checkpoints"**
+- "¿Handoff target MVP confirmado como stub email/teléfono (OD-7 cerrada)?" = **"Reabrir decisión de handoff"**
+- (Tras reapertura) "¿Qué handoff target uso como base del refactor?" = **"B) Stub + email (mantener OD-7) (Recomendado)"**
+**AI Response**: Plan validado — 3 fases (Canónicos → Application Design derivados → Cierre). Handoff target mantenido como stub email/teléfono per OD-7 cerrada en Unit 3 NFR-R; WhatsApp Business documentado como Fase 2 explícito en PRD/stories/roadmap.
+**Context**: Decisión coherente con estado actual de Unit 3 (NFR-D + ID ya implementados con `nodemailer + mailhog`). Reabrir handoff hubiera implicado refactor Unit 3 completo — descartado por timeline Demo Day.
+
+---
+
+## Refactor Oct8ne — Fase 1 (Canónicos) ejecutada
+**Timestamp**: 2026-06-01T00:30:00Z
+**AI Response**: 4 archivos canónicos modificados (5 incluyendo PRD duplicado):
+- `inception/requirements/requirements.md` (+/-8): MH-9 reformulado a "Despliegue gradual con kill switch"; §7.2 Constraints; OD-7 cerrada con stub+email; Justificación Unit 3.
+- `inception/user-stories/personas.md` (+/-14): P2 acceso (email/teléfono), P3/P4 dolor (sin chat activo), P6 responsabilidades (kill switch runbook), P7 (presupuesto multi-canal), tabla mapa P6 (gradual + kill switch).
+- `inception/user-stories/stories.md` (+59/-36): E2-S2/E2-S4 contexto baseline, **E3-S3 reescrito** (notificación email/teléfono al equipo CX), E4 header (MH-9 = gradual rollout), **E4-S2 reescrito** con 5 escenarios (split + kill switch + alertas + ramp-up controlado), coverage MH-9.
+- `specs/prd.md` (+51/-35) + `ai-dlc/prd.md` sincronizado vía `cp`: Resumen ejecutivo, Paso 0 #7, tabla alternativas, decisión sobre Oct8ne, ICP B stack, objeciones, M5 features, principios §6 P6, Journey 4 handoff, MH-9, WH-2, Gantt, mapa de roles, Caso 5, métricas (baseline + Q3 + Q4 + Q6 + A3), dataset eval (Oct8ne 2022-2023 como referencia histórica), R-9 mitigación, decisión Fase 2, glosario (+entrada nueva "Despliegue Gradual con Kill Switch").
+
+Lenguaje base aplicado: "Oct8ne ya no atiende chat — solo batch outbound vía Excel manual" (validado 2026-05-25); A/B → Despliegue gradual con kill switch; Widget Oct8ne → notificación email/teléfono al equipo CX; baseline Oct8ne 50-60% → referencia histórica 2022-2023.
+**Context**: Checkpoint con usuario tras Fase 1. Usuario aprueba continuar a Fase 2.
+
+---
+
+## Refactor Oct8ne — Fase 2 (Application Design derivados) ejecutada
+**Timestamp**: 2026-06-01T01:00:00Z
+**AI Response**: Validación previa — grep en Unit 3 construction docs para obtener naming canónico post-resolución: `HandoffService` con pipeline `TriggerDetector → PackageBuilder → DeliveryAdapter`, `RolloutGate` con `shouldServeHermes()`, `system_config` table con `rollout_salt`/`hermes_enabled`/`hermes_traffic_percentage`, `/admin/rollout/*` endpoints, `m8-rollout.plugin.ts`. **Hallazgo crítico**: Unit 3 NFR-R degradó auto-rollback por degradación de KPI a Fase 2 (MVP requiere acción manual del operador alertado); contradicción con texto de Fase 1 que decía "rollback automático" → mini-ajuste aplicado.
+
+8 archivos de `inception/application-design/` modificados + mini-ajuste a Fase 1:
+- `unit-of-work-story-map.md` (+/-6): E3-S3 + E4-S2 + MH-9 coverage.
+- `unit-of-work-dependency.md` (+/-14): Matriz Unit 3 dep, IP-5 `/widget/config`, regla degradación U2 antes que U3, parallelization, migration nombrado `0003_unit3_handoff_rollout.sql`, **rollback strategy con auto-rollback=Fase 2 explícito**.
+- `unit-of-work.md` (+/-38): Unit 3 definition completa, modules owned (M5 pipeline + M8 RolloutGate), stories, deliverables (migrations completas + `HandoffService` pipeline + `RolloutGate` + endpoints `/admin/rollout/*` + `/widget/config` + email service), DoD, plugins (`m8-rollout`), migration rename.
+- `component-dependency.md` (+/-51): Matriz M8 → RolloutGate, `system_config` table, Email Service dep, jobs sin auto-rollback, diagrama Handoff (`dispatchHandoff` + Email Service), **diagrama 3.3 reescrito** (Rollout Gate con kill switch + alerts + acción manual), P-3 critical path actualizado.
+- `component-methods.md` (+/-68): `IHandoffService.dispatchHandoff()` (sustituye `transferToOct8ne()`), `HandoffResult { handoffTicketId, dispatchedAt, deliveryChannel }`, M8 title (+Rollout Gate), `IRolloutGate.shouldServeHermes()` con cache 60s, `RolloutConfig` interface (`hermesEnabled`+`hermesTrafficPercentage`+`rolloutSalt`+`handoffStubMessage`), nota auto-rollback=Fase 2.
+- `components.md` (+/-25): M5 purpose+responsibilities+interface (`dispatchHandoff`), M8 title + Rollout Gate, M8 interface (`IRolloutGate`), tabla mapping (M8 + RolloutGate).
+- `services.md` (+/-40): Service table (`RolloutGate`), sequence diagram Handoff (Email Service participant), **§4 reescrito** (Rollout Gate al inicio del widget con kill switch + alerts + ops manual), External `nodemailer` + `/widget/config`, jobs sin auto-rollback.
+- `application-design.md` (+/-27): Stack `nodemailer`, workspace layout (controllers `widget-config`+admin `rollout`/`handoff-tickets`/`alerts`; service `rollout-gate.service.ts`; repos `system-config`+`handoff-tickets`), tabla M8 + RolloutGate, Authentication (incl. `/admin/rollout/*` rol admin), flows (2. Handoff + dispatchHandoff; 3. Rollout Gate), **OD-7 CERRADA 2026-05-25**.
+
+Mini-ajuste a Fase 1:
+- `stories.md` (+5/-6): E4-S2 title (auto-rollback Fase 2 explícito); Scenario "Rollback automático" reescrito a "Alertas + rollback manual por operador" alineado con Unit 3 NFR-R.
+- `specs/prd.md` + `ai-dlc/prd.md` (+1/-1): R-9 mitigación (alertas + rollback manual; auto-rollback Fase 2).
+
+Naming canónico aplicado (Inception ahora alineado a Unit 3):
+- `transferToOct8ne()` → `dispatchHandoff()`
+- `HandoffResult.oct8neTicketId` → `HandoffResult.handoffTicketId` (HT-2026-XXXX) + `deliveryChannel`
+- `IABRoutingService.decideBot(): "hermes"|"oct8ne"` → `IRolloutGate.shouldServeHermes(): Promise<boolean>`
+- `ABSplitConfig` + tablas `ab_split_config`/`ab_rollback_rules` → `RolloutConfig` + `system_config` + `system_config_audit` + `alert_rules` + `handoff_tickets`
+- `Oct8ne API` dep → Email Service (`nodemailer` + mailhog dev / SMTP real Fase 2)
+- `GET /ab/decide` → `GET /widget/config`
+- `0003_unit3_handoff_ab.sql` → `0003_unit3_handoff_rollout.sql`
+**Context**: Checkpoint con usuario tras Fase 2. Usuario aprueba continuar a Fase 3 (cierre).
+
+---
+
+## Refactor Oct8ne — Fase 3 (cierre) ejecutada
+**Timestamp**: 2026-06-01T01:15:00Z
+**AI Response**: Cierre del refactor:
+1. Esta entrada de `audit.md` (append-only).
+2. `aidlc-state.md` actualizado — quitar pendiente diferido "refactor de coherencia documental Oct8ne"; reflejar OD-7 cerrada en Inception + Unit 3 NFR-R alineados.
+3. Memoria persistente `blocker_oct8ne_status.md` actualizada — marcar refactor como completado 2026-06-01.
+
+Total del refactor (Fase 1 + 2 + mini-ajustes): **13 archivos modificados**, ~324 inserciones / ~268 eliminaciones. Coherencia documental Oct8ne → Despliegue Gradual con Kill Switch + Handoff stub email/teléfono cerrada en `aidlc-docs/inception/*` y `specs/prd.md`. Unit 3 construction docs (post-resolución 2026-05-25) ya estaban alineados — no requirieron cambios.
+**Context**: 🏁 Pendiente diferido cerrado. Repo listo para presentar a CTO con coherencia documental completa. Code Generation de U1/U2/U3 sigue como pendiente diferido (no bloqueado por este refactor; requiere decisión explícita del usuario para reactivar).
+
+---
