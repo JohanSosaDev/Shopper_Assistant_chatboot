@@ -1,7 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { loadEnv } from './config/env.js';
 import postgresPlugin from './plugins/postgres.plugin.js';
-import bedrockPlugin from './plugins/bedrock.plugin.js';
+// import bedrockPlugin from './plugins/bedrock.plugin.js'; // Demo Day: deshabilitado (classify+generate hardcoded, sin LLM real). @anthropic-ai/bedrock-sdk@0.12.0 tiene incompatibilidad de exports con @anthropic-ai/sdk anidado.
 import errorHandlerPlugin from './plugins/error-handler.plugin.js';
 import requestContextPlugin from './plugins/request-context.plugin.js';
 import securityPlugin from './plugins/security.plugin.js';
@@ -46,12 +46,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     connectionString: env.DATABASE_URL,
   });
 
-  await app.register(bedrockPlugin, {
-    region: env.BEDROCK_REGION,
-    modelId: env.BEDROCK_MODEL_ID,
-    accessKeyId: env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-  });
+  // await app.register(bedrockPlugin, { ... }); // Demo Day: ver comentario en import arriba.
 
   await app.register(errorHandlerPlugin);
 

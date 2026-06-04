@@ -95,6 +95,21 @@ export function createConversationRepo(pool: Pool) {
     return result.rowCount ?? 0;
   }
 
+  async function ensureExists(data: {
+    conversation_id: string;
+    brand: BrandId;
+    auth_method: 'sfcc_session' | 'guest_matched' | 'guest_unauth';
+    policy_version: string;
+    customer_id_hash?: string;
+  }): Promise<void> {
+    await pool.query(
+      `INSERT INTO conversations (conversation_id, brand, auth_method, status, policy_version, customer_id_hash)
+       VALUES ($1, $2, $3, 'awaiting_consent', $4, $5)
+       ON CONFLICT (conversation_id) DO UPDATE SET last_activity_at = NOW()`,
+      [data.conversation_id, data.brand, data.auth_method, data.policy_version, data.customer_id_hash ?? null],
+    );
+  }
+
   async function insertTurn(data: {
     conversation_id: string;
     role: 'user' | 'assistant' | 'system';
@@ -145,6 +160,7 @@ export function createConversationRepo(pool: Pool) {
   return {
     findById,
     create,
+    ensureExists,
     updateStatus,
     touch,
     closeStale,

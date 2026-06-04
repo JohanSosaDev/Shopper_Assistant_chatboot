@@ -5,9 +5,11 @@ import { HermesError, isHermesError } from '../models/errors.js';
 export default fp(async (fastify: FastifyInstance) => {
   fastify.setErrorHandler((
     error: FastifyError | HermesError | Error,
-    _request: FastifyRequest,
+    request: FastifyRequest,
     reply: FastifyReply,
   ) => {
+    request.log.error({ err: error }, 'request failed');
+
     if (isHermesError(error)) {
       reply.status(error.httpStatus).send({
         status: 'error',

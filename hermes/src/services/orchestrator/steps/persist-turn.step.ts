@@ -12,7 +12,7 @@ export function persistTurnStep(conversationRepo: ConversationRepo): PipelineSte
     });
 
     if (ctx.finalResponse) {
-      await conversationRepo.insertTurn({
+      const assistantTurn = await conversationRepo.insertTurn({
         conversation_id: ctx.input.conversation_id,
         role: 'assistant',
         text: ctx.finalResponse,
@@ -21,6 +21,7 @@ export function persistTurnStep(conversationRepo: ConversationRepo): PipelineSte
         latency_ms: Date.now() - ctx.startTime,
         early_exit_reason: ctx.earlyExitReason ?? undefined,
       });
+      ctx.assistantTurnId = assistantTurn.turn_id;
     }
   };
 }

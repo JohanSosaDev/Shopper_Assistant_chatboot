@@ -3,8 +3,8 @@ import type { ConsentDecision } from '../models/consent.js';
 import type { BrandConfig } from '../models/brand-config.js';
 import { anonymizePII } from '../lib/pii-anonymizer.js';
 
-const AFFIRMATIVE = /^(sí|si|ok|okay|dale|vale|claro|acepto|de acuerdo|continuar)$/i;
-const NEGATIVE = /^(no|nop|nunca|no gracias|no quiero)$/i;
+const AFFIRMATIVE = /\b(sí|si|ok|okay|dale|vale|claro|acepto|autorizo|de acuerdo|continuar|está bien|por supuesto)\b/i;
+const NEGATIVE = /\b(no|nunca|rechazo|niego|no gracias|no quiero|no autorizo)\b/i;
 
 export interface ComplianceService {
   evaluateConsent(clientText: string): ConsentDecision;
@@ -20,14 +20,14 @@ export interface ComplianceService {
 export function createComplianceService(consentRepo: ConsentRepo): ComplianceService {
   return {
     evaluateConsent(clientText: string): ConsentDecision {
-      const trimmed = clientText.trim().toLowerCase().replace(/[.!?]+$/, '');
-
-      if (AFFIRMATIVE.test(trimmed)) {
-        return { granted: true, ambiguous: false, reason: null };
-      }
+      const trimmed = clientText.trim().toLowerCase();
 
       if (NEGATIVE.test(trimmed)) {
         return { granted: false, ambiguous: false, reason: null };
+      }
+
+      if (AFFIRMATIVE.test(trimmed)) {
+        return { granted: true, ambiguous: false, reason: null };
       }
 
       return {

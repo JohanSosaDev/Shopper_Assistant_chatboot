@@ -36,7 +36,7 @@ export function createConversationService(
 ): ConversationService {
   const steps: PipelineStep[] = [
     loadBrandConfigStep(brandConfigService),
-    parseRequestStep(sessionService, piiSalt),
+    parseRequestStep(sessionService, conversationRepo, piiSalt),
     consentGateStep(complianceService),
     inputGuardrailsStep(),
     classifyIntentStep(),

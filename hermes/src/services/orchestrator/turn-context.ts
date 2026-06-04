@@ -25,6 +25,7 @@ export interface TurnContext {
   startTime: number;
   tokensIn: number | null;
   tokensOut: number | null;
+  assistantTurnId: string | null;
 }
 
 export function createTurnContext(input: TurnInput): TurnContext {
@@ -47,5 +48,6 @@ export function createTurnContext(input: TurnInput): TurnContext {
     startTime: Date.now(),
     tokensIn: null,
     tokensOut: null,
+    assistantTurnId: null,
   };
 }

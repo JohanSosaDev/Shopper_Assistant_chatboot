@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import type { PipelineStep } from '../pipeline.js';
 import type { LoggerService } from '../../logger.service.js';
 import type { ComplianceService } from '../../compliance.service.js';
@@ -10,14 +9,14 @@ export function logTurnStep(
   piiSalt: string,
 ): PipelineStep {
   return async (ctx) => {
-    if (!ctx.finalResponse) {
+    if (!ctx.finalResponse || !ctx.assistantTurnId) {
       return;
     }
 
     const anonymized = complianceService.anonymize(ctx.finalResponse, piiSalt);
 
     const logInput: TurnLogInput = {
-      turn_id: randomUUID(),
+      turn_id: ctx.assistantTurnId,
       conversation_id: ctx.input.conversation_id,
       timestamp_iso: new Date().toISOString(),
       customer_id_hash: ctx.identityResult?.customer_id_hash ?? null,

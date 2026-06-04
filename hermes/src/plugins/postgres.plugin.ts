@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import { Pool } from 'pg';
+import pg, { type Pool } from 'pg';
 import type { FastifyInstance } from 'fastify';
 
 declare module 'fastify' {
@@ -14,7 +14,7 @@ export interface PostgresPluginOptions {
 }
 
 export default fp<PostgresPluginOptions>(async (fastify: FastifyInstance, opts) => {
-  const pool = new Pool({
+  const pool = new pg.Pool({
     connectionString: opts.connectionString,
     max: opts.poolSize ?? 10,
   });

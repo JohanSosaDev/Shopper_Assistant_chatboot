@@ -72,9 +72,11 @@ CREATE INDEX idx_turn_log_audit_customer
   WHERE customer_id_hash IS NOT NULL;
 
 -- Query: retention job — find logs older than 90 days
+-- NOTE: cannot use WHERE timestamp_iso < (NOW() - INTERVAL '90 days') as
+-- predicate because NOW() is STABLE not IMMUTABLE. Full index on the column;
+-- planner uses it for the retention scan with parameter-based predicate.
 CREATE INDEX idx_turn_log_audit_retention
-  ON turn_log_audit (timestamp_iso)
-  WHERE timestamp_iso < (NOW() - INTERVAL '90 days');
+  ON turn_log_audit (timestamp_iso);
 
 -- Query: latency monitoring (Unit 3 R-ALERT-2 latency_p95_breach)
 CREATE INDEX idx_turn_log_audit_latency_recent
