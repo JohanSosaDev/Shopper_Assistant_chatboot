@@ -4,6 +4,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npx tsc -p tsconfig.json
+RUN cd widget && npm install --no-audit --no-fund
 RUN npm run build:widget
 RUN npm prune --omit=dev
 

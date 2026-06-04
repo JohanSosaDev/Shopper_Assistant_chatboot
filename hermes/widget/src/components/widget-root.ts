@@ -62,6 +62,11 @@ export function createWidgetRoot(
     container.classList.add('hermes-chat--open');
   });
 
+  const wrapper = document.createElement('div');
+  wrapper.className = 'hermes-chat-root';
+  wrapper.appendChild(fab);
+  wrapper.appendChild(container);
+
   let widgetConfig: WidgetConfig | null = null;
 
   async function init(): Promise<void> {
@@ -97,5 +102,5 @@ export function createWidgetRoot(
     });
   }
 
-  return { el: container, init };
+  return { el: wrapper, init };
 }

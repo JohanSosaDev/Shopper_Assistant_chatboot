@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hermes Widget — Test local</title>
+  <link rel="stylesheet" href="widget.css" />
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    h1 { color: #C41E3A; margin-top: 0; }
+    .info {
+      background: #fff8e1;
+      border-left: 4px solid #ffc107;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      border-radius: 4px;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    .test-orders { margin-top: 1rem; }
+    .test-orders th, .test-orders td {
+      padding: 6px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .test-orders th { background: #fafafa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Página de prueba — Hermes Widget</h1>
+
+    <p>
+      Esta página simula una página de producto de Patprimo. El widget de chat debería aparecer
+      en la esquina inferior derecha (mismo lugar donde irá en la sandbox SFCC).
+    </p>
+
+    <div class="info">
+      <strong>Cómo probar el flujo Caso 1:</strong>
+      <ol>
+        <li>Click en el botón flotante del widget (esquina inferior derecha).</li>
+        <li>Escribe <code>Hola</code> y envía → debe pedir consentimiento.</li>
+        <li>Escribe <code>Si, acepto</code> → debe confirmar.</li>
+        <li>Escribe <code>Cual es el estado de mi pedido PP-2026-0001?</code> → debe responder con tracking.</li>
+      </ol>
+    </div>
+
+    <h2>Pedidos de prueba disponibles (modo mock)</h2>
+    <table class="test-orders">
+      <thead>
+        <tr><th>Order ID</th><th>Estado</th><th>ETA</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>PP-2026-0001</td><td>En tránsito</td><td>2026-06-05</td></tr>
+        <tr><td>PP-2026-0002</td><td>Entregado</td><td>—</td></tr>
+        <tr><td>PP-2026-0003</td><td>Procesando</td><td>2026-06-10</td></tr>
+        <tr><td>PP-2026-0004</td><td>Cancelado</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="widget.js"></script>
+  <script src="test-init.js"></script>
+</body>
+</html>

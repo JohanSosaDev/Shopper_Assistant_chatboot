@@ -11,6 +11,7 @@ import m8BrandConfigPlugin from './plugins/m8-brand-config.plugin.js';
 import m3SfccPlugin from './plugins/m3-sfcc.plugin.js';
 import m7ObservabilityPlugin from './plugins/m7-observability.plugin.js';
 import m1ConversationPlugin from './plugins/m1-conversation.plugin.js';
+import { registerWidgetStaticRoutes } from './controllers/widget-static.controller.js';
 
 import { createConversationRepo } from './repositories/conversation.repo.js';
 import { createConsentRepo } from './repositories/consent.repo.js';
@@ -95,6 +96,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(m8BrandConfigPlugin, { brandConfigService });
   await app.register(m7ObservabilityPlugin, { loggerService });
   await app.register(m1ConversationPlugin, { conversationService });
+
+  await registerWidgetStaticRoutes(app);
 
   registerJobs(app, [
     createSessionCleanupJob(conversationRepo),

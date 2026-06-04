@@ -49,7 +49,7 @@
 - [x] Units Generation (complete — Minimal depth — 3 artifacts en `inception/application-design/`: unit-of-work.md, unit-of-work-dependency.md, unit-of-work-story-map.md. 16 stories mapeadas, 10/10 MH coverage)
 
 ### 🟢 CONSTRUCTION PHASE (Per-Unit Loop × 3, secuencial)
-- [ ] Unit 1 — Core Agente: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅** → CG (en progreso 2026-06-02: Steps 1-3/19 ✅; plan aprobado con 2 ajustes Plan B SFCC + widget audit)
+- [x] Unit 1 — Core Agente: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅ → CG ✅** (CG completo 2026-06-04; smoke caso 1 verde end-to-end con SFCC_MODE=mock; 8 bugs estructurales del code gen arreglados durante smoke — ver commit `ac396fd`)
 - [ ] Unit 2 — Knowledge & Brand Voice: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅** → CG (CG diferido)
 - [ ] Unit 3 — Handoff & Despliegue Gradual: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅** → CG (todos los stages de diseño aprobados 2026-05-25; OD-7 cerrada; Demo Day runbook documentado)
 - [x] Build and Test ✅ COMPLETE (2026-05-25) — 5 instruction docs en `aidlc-docs/construction/build-and-test/`; OD-8 (CI/CD) cerrada como Fase 2 candidate
@@ -64,11 +64,11 @@
 - **Buffer**: 1 día entre Build/Test y Demo Day — riesgo alto, mitigación = degradar Unit 2 a "brand config mínimo" si Unit 1 se extiende
 
 ## Current Status
-- **Lifecycle Phase**: INCEPTION ✅ COMPLETE — **CONSTRUCTION ✅ COMPLETE (sin código MVP)** — OPERATIONS placeholder.
-- **Current Stage**: Build and Test ✅ COMPLETE (2026-05-25). 5 instruction docs generadas: build-instructions, unit-test-instructions, integration-test-instructions, performance-test-instructions, build-and-test-summary.
-- **Awaiting**: aprobación explícita del usuario para Build and Test antes de declarar workflow AI-DLC completo (per AI-DLC rule).
-- **Next**: 🟡 OPERATIONS (placeholder — no MVP scope). De facto, workflow AI-DLC documentación COMPLETO.
-- **Code Generation status**: U1 rolled back / U2 deferred / U3 deferred — DISEÑO 100% en docs sin código generado.
-- **🏁 Hito final del workflow AI-DLC docs**: TODO el documentación del MVP está completa (Inception + Construction × 3 Units × 4 design stages + Build and Test). Solo falta Code Generation cuando el usuario decida ejecutarla.
-- **Refactor coherencia documental Oct8ne** ✅ COMPLETO (2026-06-01) — 13 archivos en `aidlc-docs/inception/*` + `specs/prd.md` alineados al lenguaje post-resolución blocker (Oct8ne no atiende chat → batch outbound; A/B vs Oct8ne → Despliegue Gradual con Kill Switch; widget Oct8ne → notificación email/teléfono via `nodemailer`; naming canónico Inception alineado a Unit 3: `dispatchHandoff()`, `IRolloutGate.shouldServeHermes()`, `system_config`, `/widget/config`, `0003_unit3_handoff_rollout.sql`). Auto-rollback automático por degradación de KPI degradado a Fase 2 per Unit 3 NFR-R (MVP usa alerting + acción manual del operador).
-- **Pendientes diferidos (no bloquean Construction)**: Code Generation de U1/U2/U3 — requiere decisión explícita del usuario para reactivar.
+- **Lifecycle Phase**: INCEPTION ✅ COMPLETE — **CONSTRUCTION ✅ COMPLETE (Unit 1 código + smoke caso 1 verde; Unit 2/3 diferidos a Fase 2)** — OPERATIONS placeholder.
+- **Current Stage**: Unit 1 Code Generation ✅ COMPLETE (2026-06-04) — código en `hermes/` + smoke caso 1 end-to-end verde con SFCC_MODE=mock. Stack Docker corriendo: postgres-pgvector healthy, mailhog up, hermes-hermes healthy. Commits: `5628ea9` (código) + `ac396fd` (8 hotfixes).
+- **Demo Day**: 2026-06-09 — T-5 días. Hermes operativo localmente, listo para integración SFCC sandbox.
+- **Next operativo**: (1) integrar widget en sandbox SFCC personal vía Cloudflare Tunnel (per `project_sfcc_integration_plan`), (2) probar más casos del runbook (pedido inexistente, consent denied, jailbreak), (3) grabar video Plan B con sistema funcional.
+- **Code Generation status**: U1 ✅ COMPLETO / U2 diferido Fase 2 / U3 diferido Fase 2 (decisión explícita del usuario per `feedback_demo_day_priority` 2026-06-04: proteger Demo Day sobre scope).
+- **8 bugs del code gen Unit 1 arreglados durante smoke** (commit `ac396fd`): docker-init SQL var syntax, pg ESM imports, NOW() en index predicate, bedrock SDK incompat, AFFIRMATIVE regex strict, pipeline no creaba conversation row, log-turn inventaba turn_id (FK violation), error-handler silenciaba errores. Detalles en commit.
+- **Refactor coherencia documental Oct8ne** ✅ COMPLETO (2026-06-01) — 13 archivos en `aidlc-docs/inception/*` + `specs/prd.md` alineados al lenguaje post-resolución blocker. Naming canónico Inception alineado a Unit 3: `dispatchHandoff()`, `IRolloutGate.shouldServeHermes()`, `system_config`, `/widget/config`, `0003_unit3_handoff_rollout.sql`.
+- **Blocker Docker pull (2026-06-02) RESUELTO 2026-06-04** — root cause: MTU mismatch en red ISP cortando blobs >20MB de CloudFront-Docker. Solución: Cloudflare WARP activado en máquina del usuario. Las 3 imágenes en cache local (pgvector/pgvector:pg16, node:20-alpine, mailhog/mailhog).
