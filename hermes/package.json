@@ -26,6 +26,8 @@
     "test:pbt": "vitest run tests/pbt",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "smoke:caso1": "tsx scripts/smoke-caso1.ts",
+    "demo": "node scripts/demo.mjs",
+    "demo:stop": "node scripts/demo-stop.mjs",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write src/",
