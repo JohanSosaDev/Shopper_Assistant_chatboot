@@ -1,0 +1,53 @@
+[
+  {
+    "order_id": "PP-2026-0001",
+    "status": "en_transito",
+    "status_label": "En tránsito",
+    "eta": "2026-06-05",
+    "tracking_number": "TCC-987654321",
+    "carrier": "TCC",
+    "items": [
+      { "sku": "PP-BUZ-JEAN-001", "name": "Buzo Jean Clásico", "quantity": 1 },
+      { "sku": "PP-CAM-LIN-002", "name": "Camisa Lino Manga Larga", "quantity": 2 }
+    ],
+    "total": "$ 239.800"
+  },
+  {
+    "order_id": "PP-2026-0002",
+    "status": "entregado",
+    "status_label": "Entregado",
+    "eta": null,
+    "tracking_number": "Servientrega-123456789",
+    "carrier": "Servientrega",
+    "items": [
+      { "sku": "PP-PAN-DEP-003", "name": "Pantalón Deportivo Mujer", "quantity": 1 }
+    ],
+    "total": "$ 89.900"
+  },
+  {
+    "order_id": "PP-2026-0003",
+    "status": "procesando",
+    "status_label": "Procesando",
+    "eta": "2026-06-10",
+    "tracking_number": null,
+    "carrier": null,
+    "items": [
+      { "sku": "PP-CAM-ALG-004", "name": "Camiseta Algodón Premium", "quantity": 3 },
+      { "sku": "PP-ZAP-CUE-005", "name": "Zapatos Cuero Negro", "quantity": 1 },
+      { "sku": "PP-COR-CAS-006", "name": "Corbata Casual", "quantity": 1 }
+    ],
+    "total": "$ 412.500"
+  },
+  {
+    "order_id": "PP-2026-0004",
+    "status": "cancelado",
+    "status_label": "Cancelado",
+    "eta": null,
+    "tracking_number": null,
+    "carrier": null,
+    "items": [
+      { "sku": "PP-CAM-POL-007", "name": "Polo Clásica", "quantity": 1 }
+    ],
+    "total": "$ 59.900"
+  }
+]

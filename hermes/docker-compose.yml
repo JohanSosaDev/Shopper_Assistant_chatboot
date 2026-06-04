@@ -1,0 +1,64 @@
+services:
+  postgres-pgvector:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: hermes
+      POSTGRES_USER: hermes_app
+      POSTGRES_PASSWORD: ${PG_APP_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: pg_isready -U hermes_app -d hermes
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  hermes:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      LOG_LEVEL: info
+      DATABASE_URL: postgresql://hermes_app:${PG_APP_PASSWORD}@postgres-pgvector:5432/hermes
+      POSTGRES_ROOT_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+      PG_APP_PASSWORD: ${PG_APP_PASSWORD}
+      PG_RETENTION_PASSWORD: ${PG_RETENTION_PASSWORD}
+      BEDROCK_REGION: ${BEDROCK_REGION}
+      BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      SFCC_MODE: ${SFCC_MODE:-mock}
+      SFCC_BASE_URL: ${SFCC_BASE_URL}
+      SFCC_CLIENT_ID: ${SFCC_CLIENT_ID}
+      SFCC_CLIENT_SECRET: ${SFCC_CLIENT_SECRET}
+      PII_SALT: ${PII_SALT}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      RATE_LIMIT_IP_MAX: ${RATE_LIMIT_IP_MAX:-30}
+      RATE_LIMIT_CONV_MAX: ${RATE_LIMIT_CONV_MAX:-10}
+      JWT_SECRET: ${JWT_SECRET}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_FROM: ${SMTP_FROM:-hermes@patprimo.local}
+    depends_on:
+      postgres-pgvector:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:3000/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pgdata:

@@ -49,7 +49,7 @@
 - [x] Units Generation (complete — Minimal depth — 3 artifacts en `inception/application-design/`: unit-of-work.md, unit-of-work-dependency.md, unit-of-work-story-map.md. 16 stories mapeadas, 10/10 MH coverage)
 
 ### 🟢 CONSTRUCTION PHASE (Per-Unit Loop × 3, secuencial)
-- [ ] Unit 1 — Core Agente: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅** → CG (rollback total 2026-05-20; CG pausado)
+- [ ] Unit 1 — Core Agente: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅** → CG (en progreso 2026-06-02: Steps 1-3/19 ✅; plan aprobado con 2 ajustes Plan B SFCC + widget audit)
 - [ ] Unit 2 — Knowledge & Brand Voice: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅** → CG (CG diferido)
 - [ ] Unit 3 — Handoff & Despliegue Gradual: **FD ✅ → NFR-R ✅ → NFR-D ✅ → ID ✅** → CG (todos los stages de diseño aprobados 2026-05-25; OD-7 cerrada; Demo Day runbook documentado)
 - [x] Build and Test ✅ COMPLETE (2026-05-25) — 5 instruction docs en `aidlc-docs/construction/build-and-test/`; OD-8 (CI/CD) cerrada como Fase 2 candidate

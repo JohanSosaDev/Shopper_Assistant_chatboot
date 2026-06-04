@@ -34,55 +34,44 @@ Esta sección define el **single source of truth** que cada step consulta:
 
 ## Generation Steps (numerados, ejecutables en orden)
 
-### Step 1: Project Structure Setup (greenfield)
-- [ ] Crear directorio `hermes/` en la raíz del repo
-- [ ] Inicializar `hermes/package.json` con dependencies + scripts (per infrastructure-design.md §11)
-- [ ] Crear `hermes/tsconfig.json` (strict mode)
-- [ ] Crear `hermes/.gitignore` (node_modules, dist, .env, coverage, etc.)
-- [ ] Crear `hermes/.env.example` (template per deployment-architecture.md §5)
-- [ ] Crear `hermes/.eslintrc.json` + `hermes/.prettierrc`
-- [ ] Crear estructura de carpetas vacías:
-  - `hermes/src/{app.ts,server.ts}` placeholders
-  - `hermes/src/config/`
-  - `hermes/src/plugins/`
-  - `hermes/src/controllers/`
-  - `hermes/src/services/`
-  - `hermes/src/repositories/`
-  - `hermes/src/models/`
-  - `hermes/src/tools/sfcc/`
-  - `hermes/src/prompts/patprimo/`
-  - `hermes/src/guardrails/`
-  - `hermes/src/lib/`
-  - `hermes/src/jobs/`
-  - `hermes/migrations/`
-  - `hermes/scripts/`
-  - `hermes/tests/{unit,integration}/`
-  - `hermes/widget/src/{core,components,styles,i18n}/`
+### Step 1: Project Structure Setup (greenfield) ✅ COMPLETE 2026-06-02
+- [x] Crear directorio `hermes/` en la raíz del repo
+- [x] Inicializar `hermes/package.json` con dependencies + scripts (per infrastructure-design.md §11)
+- [x] Crear `hermes/tsconfig.json` (strict mode + `noUncheckedIndexedAccess` + `noUnusedLocals/Parameters`)
+- [x] Crear `hermes/.gitignore` (node_modules, dist, .env, coverage, etc.)
+- [x] Crear `hermes/.env.example` (template per deployment-architecture.md §5 + `SFCC_MODE` Plan B)
+- [x] Crear `hermes/.eslintrc.json` + `hermes/.prettierrc` + `hermes/.editorconfig`
+- [x] `hermes/src/app.ts` y `hermes/src/server.ts` placeholders funcionales (con `/health` endpoint)
+- [x] `hermes/README.md` con quick start + links a docs canónicos en raíz
+- **Subdirectorios `src/{config,plugins,controllers,services,repositories,models,tools/sfcc,prompts/patprimo,guardrails,lib,jobs}`**: se crearán implícitamente en Steps siguientes cuando contengan archivos. NO se crean con `.gitkeep` para evitar bloat.
 - **Implements**: bootstrap del workspace
 - **Stories**: prerequisito de todas
+- **Archivos generados (9)**: `package.json`, `tsconfig.json`, `.gitignore`, `.env.example`, `.eslintrc.json`, `.prettierrc`, `.editorconfig`, `src/app.ts`, `src/server.ts`, `README.md`.
 
-### Step 2: Database Migration Scripts
-- [ ] `hermes/migrations/0001-init.sql` — tablas `conversations`, `turns`, `tool_call_records`, `guardrail_events`, `rate_limit_buckets`, `schema_migrations`
-- [ ] `hermes/migrations/0002-consent-log.sql` — tabla `consent_log` append-only + revoke permisos UPDATE/DELETE al rol app
-- [ ] `hermes/migrations/0003-brand-config-seed.sql` — tabla `brand_configs` con seed Patprimo (en Unit 1 también — Unit 2 agrega versioning)
-- [ ] `hermes/migrations/0004-turn-log-audit.sql` — tabla `turn_log_audit` append-only + `pii_token_map` + revoke UPDATE/DELETE
-- [ ] `hermes/migrations/0005-indexes.sql` — indexes para queries comunes (conversation_id, timestamp DESC, customer_id_hash)
-- [ ] `hermes/postgres-init.sql` — extension pgvector + roles `hermes_app` y `hermes_retention`
-- **Implements**: entidades del dominio (domain-entities.md §2-§10)
+### Step 2: Database Migration Scripts ✅ COMPLETE 2026-06-02
+- [x] `hermes/migrations/0001-init.sql` — 8 ENUMs + 5 tablas (`conversations`, `turns`, `tool_call_records`, `guardrail_events`, `rate_limit_buckets`) con constraints CHECK que enforcen invariantes de domain-entities.md
+- [x] `hermes/migrations/0002-consent-log.sql` — append-only + REVOKE UPDATE/DELETE de `hermes_app` + GRANT SELECT/DELETE a `hermes_retention`
+- [x] `hermes/migrations/0003-brand-config-seed.sql` — `brand_configs` con bootstrap Patprimo placeholder (system_prompt + few_shot reales se completan en Step 9 via `npm run seed`)
+- [x] `hermes/migrations/0004-turn-log-audit.sql` — `pii_token_map` (write-only Unit 1) + `turn_log_audit` (append-only, retención ≥90d) con CHECK constraints
+- [x] `hermes/migrations/0005-indexes.sql` — 11 indexes covering session-cleanup, dashboard drill-down, retention scans, alerting feeds, latency monitoring
+- [x] `hermes/postgres-init.sql` — pgcrypto + pgvector extensions + roles `hermes_app` y `hermes_retention` con CONNECT + USAGE
+- **Implements**: entidades del dominio (domain-entities.md §2-§10) + SECURITY-06/13/14
 - **Stories**: prerequisito de E1-S2, E1-S6, E1-S1
+- **Archivos generados (6)**: `postgres-init.sql`, `migrations/0001-init.sql`, `migrations/0002-consent-log.sql`, `migrations/0003-brand-config-seed.sql`, `migrations/0004-turn-log-audit.sql`, `migrations/0005-indexes.sql`.
 
-### Step 3: Models (Zod schemas + TS types + branded types)
-- [ ] `hermes/src/models/shared.ts` — branded types (`ConversationId`, `CustomerIdHash`, `RedactedText`, `BrandId`)
-- [ ] `hermes/src/models/conversation.ts` — Conversation + Turn schemas
-- [ ] `hermes/src/models/identity.ts` — IdentityRequest + IdentityResult
-- [ ] `hermes/src/models/chat.ts` — Schemas de `POST /chat` request/response
-- [ ] `hermes/src/models/order.ts` — OrderStatusOutput
-- [ ] `hermes/src/models/consent.ts` — ConsentRecord
-- [ ] `hermes/src/models/brand-config.ts` — BrandConfig
-- [ ] `hermes/src/models/turn-log.ts` — TurnLogRecord
-- [ ] `hermes/src/models/errors.ts` — error class hierarchy (`HermesError` + subclasses)
-- **Implements**: domain-entities.md + nfr-design-patterns.md §6.2-§6.3 (error hierarchy + branded types)
+### Step 3: Models (Zod schemas + TS types + branded types) ✅ COMPLETE 2026-06-02
+- [x] `hermes/src/models/shared.ts` — branded types (`ConversationId`, `TurnId`, `ConsentId`, `ToolCallId`, `GuardrailEventId`, `PiiMapId`, `LogId`, `CustomerIdHash`, `RedactedText`, `PolicyVersion`, `BrandId`) + helpers `asBranded`/`asRedactedText`
+- [x] `hermes/src/models/conversation.ts` — `Conversation` + `Turn` schemas con 5 ENUMs + 4 refinements (invariantes domain §2-§3)
+- [x] `hermes/src/models/identity.ts` — `IdentityRequest`, `IdentityResult`, `CustomerProfile` (transient, NUNCA persistir)
+- [x] `hermes/src/models/chat.ts` — `ChatRequest`/`ChatResponse` (POST /chat) + `TurnInput`/`TurnOutput` (orchestrator)
+- [x] `hermes/src/models/order.ts` — `GetOrderStatusInput`/`Output`/`Result` con anti-enumeration `OrderNotFound`
+- [x] `hermes/src/models/consent.ts` — `ConsentRecord` + `ConsentDecision` (granted/ambiguous)
+- [x] `hermes/src/models/brand-config.ts` — `BrandConfig` + `FewShotExample` + helper `isCustomerFacingNamePlaceholder`
+- [x] `hermes/src/models/turn-log.ts` — `TurnLogRecord` + `TurnLogInput` (con `RedactedText` branded — R-PII-4 enforced en compilador)
+- [x] `hermes/src/models/errors.ts` — `HermesError` abstract + 9 subclasses (`ValidationError`, `IdentityError`, `ConsentDeniedError`, `GuardrailBlockedError`, `RateLimitError`, `BedrockError`, `SfccError`, `ToolUnavailableError`, `ConfigError`, `InternalError`) + `Result<T,E>` + `normalizeError` helper
+- **Implements**: domain-entities.md + nfr-design-patterns.md §6.2-§6.3 + R-PII-4 a nivel de tipos
 - **Stories**: foundation cross-story
+- **Archivos generados (9)**: ver paths arriba.
 
 ### Step 4: Lib utilities
 - [ ] `hermes/src/lib/hashing.ts` — sha256 customer_id hashing con salt
@@ -96,6 +85,7 @@ Esta sección define el **single source of truth** que cada step consulta:
 
 ### Step 5: Config + env validation
 - [ ] `hermes/src/config/env.ts` — Zod schema validation de env vars al startup (fail-fast per NFR §4.3)
+  - **Ajuste post-mayo 2026**: agregar `SFCC_MODE: z.enum(["real","mock"]).default("real")` per [project_demo_day_plan_b](memory/project_demo_day_plan_b.md). Plan B Demo Day: si SFCC sandbox cae, flip a `mock` en `.env` + `docker compose restart hermes` en <30s.
 - **Implements**: SECURITY-09 + NFR §4.3
 - **Stories**: prerequisito de todos
 
@@ -119,9 +109,12 @@ Esta sección define el **single source of truth** que cada step consulta:
 
 ### Step 8: Tools (SFCC integrations)
 - [ ] `hermes/src/tools/tool-registry.ts` — registro genérico + interface ToolSpec
-- [ ] `hermes/src/tools/sfcc/sfcc-client.ts` — OAuth client + undici HTTP con keep-alive + token cache
-- [ ] `hermes/src/tools/sfcc/get-order-status.tool.ts` — implementación del tool envuelto en retry + breaker + timeout
-- **Implements**: M3 SFCC integrations + R-TOOL-1..4
+- [ ] `hermes/src/tools/sfcc/sfcc-client.ts` — interface `ISFCCClient` + factory que elige `RealSFCCClient` o `MockSFCCClient` según `SFCC_MODE`
+- [ ] `hermes/src/tools/sfcc/real-sfcc-client.ts` — OAuth client + undici HTTP con keep-alive + token cache (renombrado del sfcc-client.ts original)
+- [ ] `hermes/src/tools/sfcc/mock-sfcc-client.ts` — **Plan B Demo Day**: lee `hermes/fixtures/demo-orders.json` con 3-4 pedidos demo. Determinístico, 100% offline-capable.
+- [ ] `hermes/fixtures/demo-orders.json` — 3-4 pedidos Patprimo (`PP-2026-XXXX`) con status en_transito/entregado/procesando, ETAs, # guía.
+- [ ] `hermes/src/tools/sfcc/get-order-status.tool.ts` — implementación del tool envuelto en retry + breaker + timeout (usa la factory)
+- **Implements**: M3 SFCC integrations + R-TOOL-1..4 + Plan B Demo Day
 - **Stories**: E1-S3
 
 ### Step 9: Prompts (Patprimo seed)
@@ -207,7 +200,12 @@ Esta sección define el **single source of truth** que cada step consulta:
 - [ ] `hermes/widget/src/components/consent-prompt.ts`
 - [ ] `hermes/widget/src/components/handoff-button.ts` (placeholder Unit 1)
 - [ ] `hermes/widget/src/components/error-banner.ts`
-- [ ] `hermes/widget/src/styles/widget.css` — mobile-first BEM
+- [ ] `hermes/widget/src/styles/widget.css` — mobile-first BEM. **Aplicar 4 gaps del widget audit** (per [project_widget_audit_findings](memory/project_widget_audit_findings.md)): `env(safe-area-inset-bottom)` + `env(safe-area-inset-right)` en `.widget-bubble--closed` para iOS notch; touch target `min-height: 44px; min-width: 44px` (WCAG 2.5.5).
+- **Widget audit gaps adicionales** (aplicar durante Step 16):
+  - `translate="no"` en lockup "Sofía de Patprimo", "Hermes", `customerFacingName` y order IDs (`PP-2026-XXXX`, `HT-2026-XXXX`) → evita Chrome auto-translate
+  - `aria-label="Escribe tu mensaje"` en el `<textarea>` del input-area (no hay label visible)
+  - Listener de tecla `Escape` para cerrar widget abierto (additional a botón cerrar)
+  - `prefers-reduced-motion` variant para hover scale del bubble
 - [ ] `hermes/widget/src/i18n/es-CO.ts` — strings Patprimo
 - [ ] `hermes/widget/package.json` + `hermes/widget/tsconfig.json` + `hermes/widget/esbuild.config.mjs`
 - [ ] `hermes/widget/README.md` — instrucciones de integración SFCC
@@ -241,7 +239,8 @@ Esta sección define el **single source of truth** que cada step consulta:
 - [ ] `hermes/Dockerfile` — multistage build (per infrastructure-design.md §7.1)
 - [ ] `hermes/docker-compose.yml` — final 2-service composition (per logical-components.md §7)
 - [ ] `hermes/scripts/wait-for-postgres.sh` — helper para healthcheck startup ordering (opcional)
-- **Implements**: deployment-architecture.md §7
+  - **Ajuste post-mayo 2026**: `.env.example` (creado en Step 1) debe incluir `SFCC_MODE=real` con comentario `# Plan B Demo Day: cambiar a 'mock' para usar fixtures de hermes/fixtures/demo-orders.json sin SFCC real`.
+- **Implements**: deployment-architecture.md §7 + Plan B Demo Day
 - **Stories**: foundation
 
 ---
@@ -301,8 +300,8 @@ Esta sección define el **single source of truth** que cada step consulta:
 
 ## Generation Checklist global
 
-- [ ] Plan aprobado por el usuario (Part 1 complete — esperando aprobación)
-- [ ] Step 1-19 completados (Part 2 — solo después de aprobación)
+- [x] Plan aprobado por el usuario (Part 1 complete — aprobado 2026-06-02 con 2 ajustes post-mayo)
+- [ ] Step 1-19 completados (Part 2 — Step 1 ✅ done; Step 2 esperando aprobación de cadencia step-by-step)
 - [ ] Coverage report ≥70% lines en código de negocio
 - [ ] `docker compose up -d && npm run migrate && npm run seed` levanta el sistema
 - [ ] `curl /health/ready` retorna 200

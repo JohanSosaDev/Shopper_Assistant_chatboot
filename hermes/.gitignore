@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+*.tsbuildinfo
+.tsbuildinfo
+
+# Environment (NEVER commit real secrets)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pino.log
+
+# Testing
+coverage/
+.vitest-cache/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local fixtures (committed fixtures stay; local overrides ignored)
+fixtures/local-*.json
+fixtures/.tmp-*
+
+# Docker
+docker-compose.override.yml
+
+# Backups
+backups/
+*.sql.gz
+*.dump
+
+# Widget build artifacts (rebuilt by npm run build:widget)
+widget/public/*.map
