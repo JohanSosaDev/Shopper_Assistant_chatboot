@@ -49,5 +49,108 @@
       { "sku": "PP-CAM-POL-007", "name": "Polo Clásica", "quantity": 1 }
     ],
     "total": "$ 59.900"
+  },
+  {
+    "order_id": "PP-2026-0005",
+    "status": "preparando",
+    "status_label": "Preparando en bodega",
+    "eta": "2026-06-08",
+    "tracking_number": null,
+    "carrier": null,
+    "items": [
+      { "sku": "PP-VES-ELE-008", "name": "Vestido Elegante Negro", "quantity": 1 },
+      { "sku": "PP-BLU-SED-009", "name": "Blusa Seda Estampada", "quantity": 2 }
+    ],
+    "total": "$ 329.700"
+  },
+  {
+    "order_id": "PP-2026-0006",
+    "status": "en_reparto",
+    "status_label": "En reparto (entrega hoy)",
+    "eta": "2026-06-04",
+    "tracking_number": "Coordinadora-555000111",
+    "carrier": "Coordinadora",
+    "items": [
+      { "sku": "PP-CHA-PLU-010", "name": "Chaqueta Plumífero Hombre", "quantity": 1 }
+    ],
+    "total": "$ 259.900"
+  },
+  {
+    "order_id": "PP-2026-0007",
+    "status": "devolucion",
+    "status_label": "En proceso de devolución",
+    "eta": null,
+    "tracking_number": "Envia-RET-887766",
+    "carrier": "Envia",
+    "items": [
+      { "sku": "PP-FAL-LAR-011", "name": "Falda Larga Floral", "quantity": 1 }
+    ],
+    "total": "$ 119.900"
+  },
+  {
+    "order_id": "PP-2026-0008",
+    "status": "en_transito",
+    "status_label": "En tránsito",
+    "eta": "2026-06-07",
+    "tracking_number": "TCC-441122334",
+    "carrier": "TCC",
+    "items": [
+      { "sku": "PP-CAM-ALG-004", "name": "Camiseta Algodón Premium", "quantity": 2 },
+      { "sku": "PP-JEA-SLI-012", "name": "Jean Slim Fit Hombre", "quantity": 1 },
+      { "sku": "PP-TEN-DEP-013", "name": "Tenis Deportivos Unisex", "quantity": 1 },
+      { "sku": "PP-MED-CAS-014", "name": "Medias Casuales (Pack 3)", "quantity": 2 },
+      { "sku": "PP-GOR-CAP-015", "name": "Gorra Cap Algodón", "quantity": 1 }
+    ],
+    "total": "$ 524.300"
+  },
+  {
+    "order_id": "PP-2026-0009",
+    "status": "entregado",
+    "status_label": "Entregado",
+    "eta": null,
+    "tracking_number": "TCC-998877665",
+    "carrier": "TCC",
+    "items": [
+      { "sku": "PP-ABR-LAN-016", "name": "Abrigo Lana Premium", "quantity": 1 }
+    ],
+    "total": "$ 459.900"
+  },
+  {
+    "order_id": "PP-2026-0010",
+    "status": "procesando",
+    "status_label": "Procesando",
+    "eta": "2026-06-09",
+    "tracking_number": null,
+    "carrier": null,
+    "items": [
+      { "sku": "PP-CAM-LIN-002", "name": "Camisa Lino Manga Larga", "quantity": 5 }
+    ],
+    "total": "$ 449.500"
+  },
+  {
+    "order_id": "PP-2026-0011",
+    "status": "en_transito",
+    "status_label": "En tránsito",
+    "eta": "2026-06-06",
+    "tracking_number": "Interrapidisimo-IR-2026-887",
+    "carrier": "Interrapidisimo",
+    "items": [
+      { "sku": "PP-CIN-CUE-017", "name": "Cinturón Cuero Marrón", "quantity": 1 },
+      { "sku": "PP-BIL-CUE-018", "name": "Billetera Cuero Hombre", "quantity": 1 }
+    ],
+    "total": "$ 139.800"
+  },
+  {
+    "order_id": "PP-2026-0012",
+    "status": "cancelado",
+    "status_label": "Cancelado por cliente",
+    "eta": null,
+    "tracking_number": null,
+    "carrier": null,
+    "items": [
+      { "sku": "PP-BOL-MUJ-019", "name": "Bolso Hobo Mujer", "quantity": 1 },
+      { "sku": "PP-PAÑ-SED-020", "name": "Pañuelo Seda Estampado", "quantity": 1 }
+    ],
+    "total": "$ 199.800"
   }
 ]

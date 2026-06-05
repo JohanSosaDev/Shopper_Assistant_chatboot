@@ -15,6 +15,9 @@ export default fp<SecurityPluginOptions>(async (fastify: FastifyInstance, opts) 
       },
     },
     hsts: { maxAge: 31536000, includeSubDomains: true },
+    // Permite que el widget.js/.css y /chat sean cargados desde otros origenes
+    // (e.g. sandbox SFCC `*.demandware.net` cargando el bundle del tunnel).
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
   await fastify.register(import('@fastify/cors'), {

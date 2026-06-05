@@ -67,13 +67,22 @@
     <h2>Pedidos de prueba disponibles (modo mock)</h2>
     <table class="test-orders">
       <thead>
-        <tr><th>Order ID</th><th>Estado</th><th>ETA</th></tr>
+        <tr><th>Order ID</th><th>Estado</th><th>ETA</th><th>Detalle</th></tr>
       </thead>
       <tbody>
-        <tr><td>PP-2026-0001</td><td>En tránsito</td><td>2026-06-05</td></tr>
-        <tr><td>PP-2026-0002</td><td>Entregado</td><td>—</td></tr>
-        <tr><td>PP-2026-0003</td><td>Procesando</td><td>2026-06-10</td></tr>
-        <tr><td>PP-2026-0004</td><td>Cancelado</td><td>—</td></tr>
+        <tr><td>PP-2026-0001</td><td>En tránsito</td><td>2026-06-05</td><td>2 items, TCC</td></tr>
+        <tr><td>PP-2026-0002</td><td>Entregado</td><td>—</td><td>1 item, Servientrega</td></tr>
+        <tr><td>PP-2026-0003</td><td>Procesando</td><td>2026-06-10</td><td>3 items, sin carrier</td></tr>
+        <tr><td>PP-2026-0004</td><td>Cancelado</td><td>—</td><td>1 item</td></tr>
+        <tr><td>PP-2026-0005</td><td>Preparando en bodega</td><td>2026-06-08</td><td>Vestido + 2 blusas</td></tr>
+        <tr><td>PP-2026-0006</td><td>En reparto (hoy)</td><td>2026-06-04</td><td>Chaqueta, Coordinadora</td></tr>
+        <tr><td>PP-2026-0007</td><td>En proceso de devolución</td><td>—</td><td>Falda, Envia</td></tr>
+        <tr><td>PP-2026-0008</td><td>En tránsito</td><td>2026-06-07</td><td>5 items (max), TCC</td></tr>
+        <tr><td>PP-2026-0009</td><td>Entregado</td><td>—</td><td>Abrigo premium</td></tr>
+        <tr><td>PP-2026-0010</td><td>Procesando</td><td>2026-06-09</td><td>5 camisas del mismo SKU</td></tr>
+        <tr><td>PP-2026-0011</td><td>En tránsito</td><td>2026-06-06</td><td>Cinturón + billetera, Interrapidisimo</td></tr>
+        <tr><td>PP-2026-0012</td><td>Cancelado por cliente</td><td>—</td><td>Bolso + pañuelo</td></tr>
+        <tr><td><strong>PP-2026-9999</strong></td><td><em>(inexistente)</em></td><td>—</td><td>Test anti-enumeration R-ID-2</td></tr>
       </tbody>
     </table>
   </div>
