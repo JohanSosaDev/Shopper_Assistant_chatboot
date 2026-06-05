@@ -6,6 +6,24 @@ export function executeToolsStep(toolRegistry: ToolRegistry): PipelineStep {
     // Si el intent es closing (despedida), no llamamos ningún tool.
     if (ctx.intent === 'closing') return;
 
+    // Product search: invoca search_products en lugar de get_order_status.
+    if (ctx.intent === 'product_search') {
+      const searchTool = toolRegistry.get('search_products');
+      if (!searchTool) {
+        ctx.earlyExitReason = 'tool_unavailable';
+        ctx.finalResponse = 'No tengo acceso al catálogo en este momento.';
+        return;
+      }
+      try {
+        const result = await searchTool.execute({ query: ctx.input.message, limit: 3 });
+        ctx.toolResults.push({ name: 'search_products', result });
+      } catch {
+        ctx.earlyExitReason = 'tool_unavailable';
+        ctx.finalResponse = ctx.brandConfig?.neutral_fallback_text ?? 'Tuvimos un problema buscando en el catálogo. Intenta de nuevo.';
+      }
+      return;
+    }
+
     const getOrderTool = toolRegistry.get('get_order_status');
 
     if (!getOrderTool) {

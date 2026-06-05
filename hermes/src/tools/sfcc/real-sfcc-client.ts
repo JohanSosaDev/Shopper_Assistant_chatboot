@@ -1,6 +1,7 @@
 import { request } from 'undici';
 import type { ISFCCClient } from './sfcc-client.js';
 import type { GetOrderStatusInput, GetOrderStatusResult, OrderStatusOutput } from '../../models/order.js';
+import type { SearchProductsInput, SearchProductsResult } from '../../models/product.js';
 
 interface SfccTokenResponse {
   access_token: string;
@@ -80,6 +81,12 @@ export function createRealSfccClient(config: {
 
       const body = await response.body.json() as Record<string, unknown>;
       return mapSfccOrder(body);
+    },
+
+    async searchProducts(_input: SearchProductsInput): Promise<SearchProductsResult> {
+      // Stub: la integración real con SFCC OCAPI Products API queda como Fase 2.
+      // Por ahora retorna vacío para que el flow no se rompa si alguien usa SFCC_MODE=real.
+      return { products: [], total_matched: 0 };
     },
   };
 }

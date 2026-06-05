@@ -1,0 +1,152 @@
+[
+  {
+    "sku": "PP-CAM-LIN-002",
+    "name": "Camisa Lino Manga Larga",
+    "category": "camisa",
+    "target": "hombre",
+    "colors": ["blanco", "azul", "celeste"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": "$ 89.900",
+    "description": "Camisa de lino fresco, manga larga, ideal para clima cálido"
+  },
+  {
+    "sku": "PP-CAM-ALG-004",
+    "name": "Camiseta Algodón Premium",
+    "category": "camiseta",
+    "target": "unisex",
+    "colors": ["blanco", "negro", "gris"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": "$ 49.900",
+    "description": "Camiseta básica algodón premium, corte regular"
+  },
+  {
+    "sku": "PP-JEA-SLI-012",
+    "name": "Jean Slim Fit Hombre",
+    "category": "jean",
+    "target": "hombre",
+    "colors": ["azul", "negro"],
+    "sizes": ["28", "30", "32", "34", "36"],
+    "price": "$ 129.900",
+    "description": "Jean corte slim, tiro medio, denim resistente"
+  },
+  {
+    "sku": "PP-BUZ-JEAN-001",
+    "name": "Buzo Jean Clásico",
+    "category": "buzo",
+    "target": "hombre",
+    "colors": ["azul", "gris"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": "$ 99.900",
+    "description": "Buzo en jean con capucha, casual para uso diario"
+  },
+  {
+    "sku": "PP-VES-ELE-008",
+    "name": "Vestido Elegante Negro",
+    "category": "vestido",
+    "target": "mujer",
+    "colors": ["negro"],
+    "sizes": ["S", "M", "L"],
+    "price": "$ 189.900",
+    "description": "Vestido midi ajustado, ideal para eventos formales"
+  },
+  {
+    "sku": "PP-BLU-SED-009",
+    "name": "Blusa Seda Estampada",
+    "category": "blusa",
+    "target": "mujer",
+    "colors": ["floral", "azul", "blanco"],
+    "sizes": ["S", "M", "L"],
+    "price": "$ 79.900",
+    "description": "Blusa fluida en mezcla de seda, estampado floral"
+  },
+  {
+    "sku": "PP-CHA-PLU-010",
+    "name": "Chaqueta Plumífero Hombre",
+    "category": "chaqueta",
+    "target": "hombre",
+    "colors": ["negro", "azul", "verde"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": "$ 259.900",
+    "description": "Chaqueta acolchada para clima frío, capucha removible"
+  },
+  {
+    "sku": "PP-FAL-LAR-011",
+    "name": "Falda Larga Floral",
+    "category": "falda",
+    "target": "mujer",
+    "colors": ["floral", "azul"],
+    "sizes": ["S", "M", "L"],
+    "price": "$ 119.900",
+    "description": "Falda larga estilo bohemio, estampado floral"
+  },
+  {
+    "sku": "PP-CAM-POL-007",
+    "name": "Polo Clásica Hombre",
+    "category": "polo",
+    "target": "hombre",
+    "colors": ["blanco", "negro", "azul", "rojo"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": "$ 59.900",
+    "description": "Polo en piqué, cuello con botones, casual elegante"
+  },
+  {
+    "sku": "PP-PAN-DEP-003",
+    "name": "Pantalón Deportivo Mujer",
+    "category": "pantalon",
+    "target": "mujer",
+    "colors": ["negro", "gris"],
+    "sizes": ["S", "M", "L"],
+    "price": "$ 89.900",
+    "description": "Pantalón deportivo tejido elástico, ideal para gym y casual"
+  },
+  {
+    "sku": "PP-ZAP-CUE-005",
+    "name": "Zapatos Cuero Negro Hombre",
+    "category": "zapatos",
+    "target": "hombre",
+    "colors": ["negro"],
+    "sizes": ["38", "39", "40", "41", "42", "43", "44"],
+    "price": "$ 189.900",
+    "description": "Zapatos clásicos de cuero, suela de goma, ideales para trabajo"
+  },
+  {
+    "sku": "PP-TEN-DEP-013",
+    "name": "Tenis Deportivos Unisex",
+    "category": "tenis",
+    "target": "unisex",
+    "colors": ["blanco", "negro"],
+    "sizes": ["36", "37", "38", "39", "40", "41", "42", "43"],
+    "price": "$ 159.900",
+    "description": "Tenis ligeros con suela acolchada, para uso diario y deporte"
+  },
+  {
+    "sku": "PP-ABR-LAN-016",
+    "name": "Abrigo Lana Premium Mujer",
+    "category": "abrigo",
+    "target": "mujer",
+    "colors": ["negro", "camel"],
+    "sizes": ["S", "M", "L"],
+    "price": "$ 459.900",
+    "description": "Abrigo largo de lana, corte oversize, premium"
+  },
+  {
+    "sku": "PP-BOL-MUJ-019",
+    "name": "Bolso Hobo Mujer",
+    "category": "bolso",
+    "target": "mujer",
+    "colors": ["negro", "camel", "rojo"],
+    "sizes": ["único"],
+    "price": "$ 129.900",
+    "description": "Bolso hobo de cuero sintético, espacioso, casual"
+  },
+  {
+    "sku": "PP-CIN-CUE-017",
+    "name": "Cinturón Cuero Marrón",
+    "category": "cinturon",
+    "target": "hombre",
+    "colors": ["marron", "negro"],
+    "sizes": ["90", "95", "100", "105", "110"],
+    "price": "$ 69.900",
+    "description": "Cinturón de cuero genuino, hebilla metálica clásica"
+  }
+]

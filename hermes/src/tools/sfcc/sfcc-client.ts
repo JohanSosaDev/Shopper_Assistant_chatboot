@@ -1,7 +1,9 @@
 import type { GetOrderStatusInput, GetOrderStatusResult } from '../../models/order.js';
+import type { SearchProductsInput, SearchProductsResult } from '../../models/product.js';
 
 export interface ISFCCClient {
   getOrderStatus(input: GetOrderStatusInput): Promise<GetOrderStatusResult>;
+  searchProducts(input: SearchProductsInput): Promise<SearchProductsResult>;
 }
 
 export async function createSfccClient(mode: 'real' | 'mock', config: {

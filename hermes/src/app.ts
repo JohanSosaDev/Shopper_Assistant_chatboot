@@ -29,6 +29,7 @@ import { createConversationService } from './services/conversation.service.js';
 import { createToolRegistry } from './tools/tool-registry.js';
 import { createSfccClient } from './tools/sfcc/sfcc-client.js';
 import { createGetOrderStatusTool } from './tools/sfcc/get-order-status.tool.js';
+import { createSearchProductsTool } from './tools/sfcc/search-products.tool.js';
 
 import { registerJobs } from './jobs/job-runner.js';
 import { createSessionCleanupJob } from './jobs/session-cleanup.job.js';
@@ -79,6 +80,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   const toolRegistry = createToolRegistry();
   const getOrderStatusTool = createGetOrderStatusTool(sfccClient);
   toolRegistry.register(getOrderStatusTool);
+  const searchProductsTool = createSearchProductsTool(sfccClient);
+  toolRegistry.register(searchProductsTool);
 
   const conversationService = createConversationService(
     sessionService,
