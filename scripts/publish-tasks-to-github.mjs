@@ -21,8 +21,9 @@
  *   - Escribe `docs/tasks/github-publish.yaml` con mapping local task_id → issue_number
  */
 
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { execSync, spawnSync } from 'node:child_process';
 
@@ -74,13 +75,17 @@ function parseBody(content) {
   return m ? m[1].trim() : content;
 }
 
+// Mapping explícito para tener control de acrónimos (API, QA) y conjunciones (& en vez de "And").
+const MILESTONE_TITLES = {
+  'm1-foundation': 'M1: Foundation',
+  'm2-infrastructure': 'M2: Infrastructure',
+  'm3-business-logic': 'M3: Business Logic',
+  'm4-api-and-widget': 'M4: API & Widget',
+  'm5-qa-and-deploy': 'M5: QA & Deploy',
+};
+
 function milestoneTitle(milestoneId) {
-  // m1-foundation → "M1: Foundation"
-  const m = milestoneId.match(/^m(\d+)-(.+)$/);
-  if (!m) return milestoneId;
-  const num = m[1];
-  const name = m[2].split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
-  return `M${num}: ${name}`;
+  return MILESTONE_TITLES[milestoneId] ?? milestoneId;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -250,9 +255,13 @@ for (const task of tasks) {
     continue;
   }
 
-  const args = ['issue', 'create', '--title', title, '--body', body];
+  // Escribir body a tempfile y usar --body-file para evitar shell escaping issues
+  const tmpBody = join(tmpdir(), `gh-issue-body-${task.id}.md`);
+  writeFileSync(tmpBody, body, 'utf-8');
+
+  const args = ['issue', 'create', '--title', title, '--body-file', tmpBody];
   if (milestoneMap.get(task.milestone)) {
-    args.push('--milestone', String(milestoneMap.get(task.milestone)));
+    args.push('--milestone', milestoneTitle(task.milestone));
   }
   for (const l of labels) args.push('--label', l);
 
@@ -263,7 +272,9 @@ for (const task of tasks) {
     ok(`issue creado: ${title} (#${num})`);
     issueMap.set(task.id, num);
   } catch (e) {
-    warn(`Falló issue ${task.id}: ${e.message}`);
+    warn(`Falló issue ${task.id}: ${e.message.slice(0, 300)}`);
+  } finally {
+    try { unlinkSync(tmpBody); } catch {}
   }
 }
 
@@ -309,11 +320,16 @@ for (const task of tasks) {
     task.closed_by_commit ? `\n---\nClosed by commit \`${task.closed_by_commit}\`` : '',
   ].join('\n');
 
+  // Usar --body-file para evitar issues de shell escaping
+  const tmpBody = join(tmpdir(), `gh-issue-body-update-${task.id}.md`);
+  writeFileSync(tmpBody, newBody, 'utf-8');
   try {
-    ghExec(['issue', 'edit', String(num), '--body', newBody], { stdio: 'pipe' });
+    ghExec(['issue', 'edit', String(num), '--body-file', tmpBody], { stdio: 'pipe' });
     ok(`refs actualizados en #${num}`);
   } catch (e) {
-    warn(`No se pudieron actualizar refs en #${num}: ${e.message}`);
+    warn(`No se pudieron actualizar refs en #${num}: ${e.message.slice(0, 200)}`);
+  } finally {
+    try { unlinkSync(tmpBody); } catch {}
   }
 }
 

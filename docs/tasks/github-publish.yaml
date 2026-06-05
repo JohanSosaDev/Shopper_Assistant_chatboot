@@ -1,0 +1,27 @@
+# Auto-generado por scripts/publish-tasks-to-github.mjs
+# NO editar a mano. Re-correr el script para refrescar.
+
+repo: JohanSosaDev/Shopper_Assistant_chatboot
+dryRun: false
+closeAfter: true
+
+milestones:
+  m1-foundation: 1
+  m2-infrastructure: 2
+  m3-business-logic: 3
+  m4-api-and-widget: 4
+  m5-qa-and-deploy: 5
+
+tasks:
+  001-project-bootstrap-and-schema: 1
+  002-domain-models-and-libs: 2
+  003-config-and-repos: 3
+  004-infrastructure-plugins: 4
+  005-sfcc-tools-integration: 5
+  006-prompts-guardrails-services: 6
+  007-pipeline-orchestrator: 7
+  008-api-layer-and-jobs: 8
+  009-composition-root-entrypoints: 9
+  010-frontend-widget: 10
+  011-tests-suite: 11
+  012-documentation-and-deployment: 12
