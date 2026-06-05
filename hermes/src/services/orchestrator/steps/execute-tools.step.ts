@@ -14,16 +14,27 @@ export function executeToolsStep(toolRegistry: ToolRegistry): PipelineStep {
       return;
     }
 
-    const orderIdMatch = ctx.input.message.match(/\b(PP|SS|OS|AT)-\d{4}-\d{4,6}\b/);
+    const orderIdMatch = ctx.input.message.match(/\b(PP|SS|OS|AT)-\d{4}-\d{4,6}\b/i);
 
     if (!orderIdMatch) {
-      ctx.finalResponse = 'Por favor, indíqueme el número de su pedido para poder consultarlo.';
+      // Si el cliente menciona "pedido/orden/tracking/guía" pero el formato es inválido,
+      // dar pista del formato correcto en vez del fallback genérico.
+      const ORDER_KEYWORDS = /\b(pedido|orden|tracking|guía|guia|envío|envio|compra)\b/i;
+      if (ORDER_KEYWORDS.test(ctx.input.message)) {
+        ctx.finalResponse = 'No encuentro un pedido con ese número. El formato debe ser PP-YYYY-NNNN (por ejemplo PP-2026-0001). ¿Podrías verificarlo?';
+      } else {
+        ctx.finalResponse = 'Por favor, indíqueme el número de su pedido para poder consultarlo.';
+      }
       return;
     }
 
+    // Normalizar a uppercase porque las fixtures usan PP-2026-NNNN en mayúsculas
+    // y el regex `i` flag puede haber matcheado en minúsculas.
+    const orderId = orderIdMatch[0].toUpperCase();
+
     try {
       const result = await getOrderTool.execute({
-        order_id: orderIdMatch[0],
+        order_id: orderId,
         email: null,
       });
 
