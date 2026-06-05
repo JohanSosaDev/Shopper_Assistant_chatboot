@@ -6,6 +6,12 @@ export function generateResponseStep(): PipelineStep {
       return;
     }
 
+    // Despedida cordial cuando el cliente cierra la conversación.
+    if (ctx.intent === 'closing') {
+      ctx.finalResponse = 'Perfecto, estoy a la orden si necesita otra consulta. ¡Que tenga un excelente día!';
+      return;
+    }
+
     if (ctx.toolResults.length > 0) {
       const toolResult = ctx.toolResults[0]!.result as Record<string, unknown>;
 

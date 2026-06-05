@@ -73,6 +73,10 @@ export function createWidgetRoot(
     try {
       widgetConfig = await apiClient.fetchWidgetConfig(config.brand);
       consentPrompt.querySelector('.hermes-chat__consent-text')!.textContent = widgetConfig.consentRequestText;
+      const titleEl = header.querySelector('.hermes-chat__header-title');
+      if (titleEl && widgetConfig.customerFacingName) {
+        titleEl.textContent = widgetConfig.customerFacingName;
+      }
     } catch {
       consentPrompt.querySelector('.hermes-chat__consent-text')!.textContent =
         '¿Me autoriza procesar sus datos para esta consulta?';

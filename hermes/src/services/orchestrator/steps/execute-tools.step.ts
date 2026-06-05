@@ -3,6 +3,9 @@ import type { ToolRegistry } from '../../../tools/tool-registry.js';
 
 export function executeToolsStep(toolRegistry: ToolRegistry): PipelineStep {
   return async (ctx) => {
+    // Si el intent es closing (despedida), no llamamos ningún tool.
+    if (ctx.intent === 'closing') return;
+
     const getOrderTool = toolRegistry.get('get_order_status');
 
     if (!getOrderTool) {

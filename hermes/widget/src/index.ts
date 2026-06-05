@@ -80,6 +80,16 @@ export function init(options: HermesWidgetOptions): void {
   });
 
   bus.on('handoff', () => {
-    console.log('[HermesWidget] Handoff requested — placeholder for Unit 3');
+    state.setState({
+      messages: [
+        ...state.getState().messages,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          text: 'Hemos registrado tu solicitud. Un asesor de Patprimo se contactará contigo al correo registrado en horario hábil (lunes a viernes, 8:00am a 6:00pm). Mientras tanto, ¿hay algo más en lo que pueda ayudarte?',
+          timestamp: Date.now(),
+        },
+      ],
+    });
   });
 }

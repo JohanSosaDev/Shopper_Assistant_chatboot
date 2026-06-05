@@ -126,14 +126,14 @@
   outline: none;
 }
 .hermes-chat__input:focus {
-  border-color: #C41E3A;
+  border-color: #1c1f2a;
 }
 .hermes-chat__send-btn {
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
-  color: #C41E3A;
+  color: #1c1f2a;
   display: flex;
   align-items: center;
   justify-content: center;
