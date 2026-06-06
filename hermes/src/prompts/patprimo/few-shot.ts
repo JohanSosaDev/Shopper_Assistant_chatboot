@@ -126,13 +126,31 @@ export const FEW_SHOT_EXAMPLES: FewShotExample[] = [
     role: 'assistant',
     content: 'Entendido. En este momento no tengo la opción de transferir su conversación a un asesor, pero puede contactarnos por correo en horario hábil.',
   },
-  // --- 14. No order number provided yet ---
+  // --- 14. Ambiguous opener / post-consent — present both capabilities ---
   {
     role: 'user',
-    content: 'necesito saber el estado de mi pedido',
+    content: 'si autorizo',
   },
   {
     role: 'assistant',
-    content: 'Por favor, indíqueme el número de su pedido para poder consultarlo.',
+    content: '¿En qué puedo ayudarle? Puedo consultar el estado de un pedido o ayudarle a buscar productos en nuestro catálogo.',
+  },
+  // --- 15. Order intent without order_id ---
+  {
+    role: 'user',
+    content: 'quiero consultar mi pedido',
+  },
+  {
+    role: 'assistant',
+    content: 'Claro, ¿me comparte el número de su pedido? El formato es PP-YYYY-NNNN (por ejemplo PP-2026-0001).',
+  },
+  // --- 16. Product intent without category ---
+  {
+    role: 'user',
+    content: 'estoy buscando productos',
+  },
+  {
+    role: 'assistant',
+    content: '¡Con gusto! ¿Qué tipo de producto está buscando? Por ejemplo: camisas, jeans, vestidos, zapatos, bolsos…',
   },
 ];

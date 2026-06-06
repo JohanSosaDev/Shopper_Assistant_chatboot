@@ -1,12 +1,13 @@
 import type { PipelineStep } from '../pipeline.js';
 import type { ToolRegistry } from '../../../tools/tool-registry.js';
 
+const ORDER_ID_PATTERN = /\b(PP|SS|OS|AT)-\d{4}-\d{4,6}\b/i;
+const LOOSE_NUMBER_HINT = /\d{2,}/;
+
 export function executeToolsStep(toolRegistry: ToolRegistry): PipelineStep {
   return async (ctx) => {
-    // Si el intent es closing (despedida), no llamamos ningún tool.
     if (ctx.intent === 'closing') return;
 
-    // Product search: invoca search_products en lugar de get_order_status.
     if (ctx.intent === 'product_search') {
       const searchTool = toolRegistry.get('search_products');
       if (!searchTool) {
@@ -24,42 +25,44 @@ export function executeToolsStep(toolRegistry: ToolRegistry): PipelineStep {
       return;
     }
 
-    const getOrderTool = toolRegistry.get('get_order_status');
+    if (ctx.intent === 'order_status_query') {
+      const getOrderTool = toolRegistry.get('get_order_status');
+      if (!getOrderTool) {
+        ctx.earlyExitReason = 'tool_unavailable';
+        ctx.finalResponse = ctx.brandConfig?.neutral_fallback_text ?? 'No puedo ayudarle con eso. ¿Hay algo más en lo que pueda apoyarle?';
+        return;
+      }
 
-    if (!getOrderTool) {
-      ctx.earlyExitReason = 'tool_unavailable';
-      ctx.finalResponse = ctx.brandConfig?.neutral_fallback_text ?? 'No puedo ayudarle con eso. ¿Hay algo más en lo que pueda apoyarle?';
-      return;
-    }
+      // classify-intent garantiza que el match existe; uppercase porque fixtures usan PP-2026-NNNN.
+      const orderIdMatch = ctx.input.message.match(ORDER_ID_PATTERN)!;
+      const orderId = orderIdMatch[0].toUpperCase();
 
-    const orderIdMatch = ctx.input.message.match(/\b(PP|SS|OS|AT)-\d{4}-\d{4,6}\b/i);
-
-    if (!orderIdMatch) {
-      // Si el cliente menciona "pedido/orden/tracking/guía" pero el formato es inválido,
-      // dar pista del formato correcto en vez del fallback genérico.
-      const ORDER_KEYWORDS = /\b(pedido|orden|tracking|guía|guia|envío|envio|compra)\b/i;
-      if (ORDER_KEYWORDS.test(ctx.input.message)) {
-        ctx.finalResponse = 'No encuentro un pedido con ese número. El formato debe ser PP-YYYY-NNNN (por ejemplo PP-2026-0001). ¿Podrías verificarlo?';
-      } else {
-        ctx.finalResponse = 'Por favor, indíqueme el número de su pedido para poder consultarlo.';
+      try {
+        const result = await getOrderTool.execute({ order_id: orderId, email: null });
+        ctx.toolResults.push({ name: 'get_order_status', result });
+      } catch {
+        ctx.earlyExitReason = 'tool_unavailable';
+        ctx.finalResponse = ctx.brandConfig?.neutral_fallback_text ?? 'Estamos teniendo un problema técnico. Intente en unos minutos.';
       }
       return;
     }
 
-    // Normalizar a uppercase porque las fixtures usan PP-2026-NNNN en mayúsculas
-    // y el regex `i` flag puede haber matcheado en minúsculas.
-    const orderId = orderIdMatch[0].toUpperCase();
-
-    try {
-      const result = await getOrderTool.execute({
-        order_id: orderId,
-        email: null,
-      });
-
-      ctx.toolResults.push({ name: 'get_order_status', result });
-    } catch {
-      ctx.earlyExitReason = 'tool_unavailable';
-      ctx.finalResponse = ctx.brandConfig?.neutral_fallback_text ?? 'Estamos teniendo un problema técnico. Intente en unos minutos.';
+    if (ctx.intent === 'order_intent_no_id') {
+      // Distinguir "mencionó número con formato malo" vs "no escribió número aún".
+      if (LOOSE_NUMBER_HINT.test(ctx.input.message)) {
+        ctx.finalResponse = 'El número de pedido no tiene el formato correcto. Debe ser PP-YYYY-NNNN (por ejemplo PP-2026-0001). ¿Podrías verificarlo?';
+      } else {
+        ctx.finalResponse = 'Claro, ¿me comparte el número de su pedido? El formato es PP-YYYY-NNNN (por ejemplo PP-2026-0001).';
+      }
+      return;
     }
+
+    if (ctx.intent === 'product_intent_no_query') {
+      ctx.finalResponse = '¡Con gusto! ¿Qué tipo de producto está buscando? Por ejemplo: camisas, jeans, vestidos, zapatos, bolsos…';
+      return;
+    }
+
+    // intent === 'ambiguous' (default tras consent o saludos vagos).
+    ctx.finalResponse = '¿En qué puedo ayudarle? Puedo consultar el estado de un pedido o ayudarle a buscar productos en nuestro catálogo.';
   };
 }

@@ -14,7 +14,7 @@
       color: #222;
     }
     .container {
-      max-width: 720px;
+      max-width: 820px;
       margin: 0 auto;
       background: #fff;
       padding: 2rem;
@@ -22,13 +22,23 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
     h1 { color: #1c1f2a; margin-top: 0; }
+    h2 { color: #1c1f2a; margin-top: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.4rem; }
     .info {
       background: #fff8e1;
       border-left: 4px solid #ffc107;
-      padding: 1rem;
+      padding: 1rem 1.25rem;
       margin: 1.5rem 0;
       border-radius: 4px;
     }
+    .info details { margin: 0.6rem 0; }
+    .info details summary {
+      cursor: pointer;
+      padding: 0.3rem 0;
+      font-size: 1rem;
+    }
+    .info details[open] summary { margin-bottom: 0.3rem; }
+    .info ol { margin: 0.3rem 0 0.6rem 0; padding-left: 1.4rem; }
+    .info ol li { margin: 0.25rem 0; }
     code {
       background: #f0f0f0;
       padding: 2px 6px;
@@ -36,13 +46,21 @@
       font-family: "SF Mono", Consolas, monospace;
       font-size: 0.9em;
     }
-    .test-orders { margin-top: 1rem; }
-    .test-orders th, .test-orders td {
-      padding: 6px 12px;
+    table.demo-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.92em; }
+    table.demo-table th, table.demo-table td {
+      padding: 6px 10px;
       text-align: left;
       border-bottom: 1px solid #eee;
+      vertical-align: top;
     }
-    .test-orders th { background: #fafafa; }
+    table.demo-table th { background: #fafafa; color: #1c1f2a; }
+    .queries { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+    .queries code {
+      background: #eef3ff;
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -55,36 +73,106 @@
     </p>
 
     <div class="info">
-      <strong>Cómo probar el flujo Caso 1:</strong>
-      <ol>
-        <li>Click en el botón flotante del widget (esquina inferior derecha).</li>
-        <li>Escribe <code>Hola</code> y envía → debe pedir consentimiento.</li>
-        <li>Escribe <code>Si, acepto</code> → debe confirmar.</li>
-        <li>Escribe <code>Cual es el estado de mi pedido PP-2026-0001?</code> → debe responder con tracking.</li>
-      </ol>
+      <strong>Flujos para probar</strong>
+
+      <details open>
+        <summary><strong>Flujo A — Consultar estado de pedido</strong></summary>
+        <ol>
+          <li>Abre el widget (botón flotante en la esquina inferior derecha).</li>
+          <li>Escribe <code>Hola</code> → debe pedir consentimiento.</li>
+          <li>Escribe <code>Si, acepto</code> → debe confirmar y mostrar el menú con las dos capacidades.</li>
+          <li>Escribe <code>Cual es el estado de mi pedido PP-2026-0001?</code> (o cualquier ID de la tabla) → estado real, ETA y tracking.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary><strong>Flujo B — Buscar productos por categoría</strong></summary>
+        <ol>
+          <li>Abre el widget → <code>Hola</code> → <code>Si, acepto</code>.</li>
+          <li>Prueba con una categoría concreta: <code>busco jeans</code>, <code>tienen camisas?</code>, <code>quiero un vestido</code>.</li>
+          <li>Debe responder con top-3 productos del catálogo (nombre, precio, colores, tallas, SKU).</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary><strong>Flujo C — Sub-casos sin contexto (intents refinados)</strong></summary>
+        <ol>
+          <li><code>quiero consultar mi pedido</code> → debe pedir el número (sin asumir que ya lo escribió).</li>
+          <li><code>pedido 1234</code> → debe corregir el formato (PP-YYYY-NNNN).</li>
+          <li><code>estoy buscando productos</code> → debe preguntar qué tipo de producto.</li>
+          <li><code>ok</code> o <code>hola</code> (después de aceptar) → menú genérico con las dos capacidades.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary><strong>Flujo D — Edge cases y seguridad</strong></summary>
+        <ol>
+          <li><code>PP-2026-9999</code> → "No encuentro un pedido…" (anti-enumeration R-ID-2; no expone si existe).</li>
+          <li>Conversación nueva → <code>Hola</code> → <code>No, no autorizo</code> → consent denied.</li>
+          <li><code>gracias</code> o <code>chao</code> en cualquier momento → despedida cordial (closing intent).</li>
+        </ol>
+      </details>
     </div>
 
-    <h2>Pedidos de prueba disponibles (modo mock)</h2>
-    <table class="test-orders">
+    <h2>Pedidos de prueba (modo mock)</h2>
+    <table class="demo-table">
       <thead>
         <tr><th>Order ID</th><th>Estado</th><th>ETA</th><th>Detalle</th></tr>
       </thead>
       <tbody>
-        <tr><td>PP-2026-0001</td><td>En tránsito</td><td>2026-06-05</td><td>2 items, TCC</td></tr>
-        <tr><td>PP-2026-0002</td><td>Entregado</td><td>—</td><td>1 item, Servientrega</td></tr>
-        <tr><td>PP-2026-0003</td><td>Procesando</td><td>2026-06-10</td><td>3 items, sin carrier</td></tr>
-        <tr><td>PP-2026-0004</td><td>Cancelado</td><td>—</td><td>1 item</td></tr>
-        <tr><td>PP-2026-0005</td><td>Preparando en bodega</td><td>2026-06-08</td><td>Vestido + 2 blusas</td></tr>
-        <tr><td>PP-2026-0006</td><td>En reparto (hoy)</td><td>2026-06-04</td><td>Chaqueta, Coordinadora</td></tr>
-        <tr><td>PP-2026-0007</td><td>En proceso de devolución</td><td>—</td><td>Falda, Envia</td></tr>
-        <tr><td>PP-2026-0008</td><td>En tránsito</td><td>2026-06-07</td><td>5 items (max), TCC</td></tr>
-        <tr><td>PP-2026-0009</td><td>Entregado</td><td>—</td><td>Abrigo premium</td></tr>
-        <tr><td>PP-2026-0010</td><td>Procesando</td><td>2026-06-09</td><td>5 camisas del mismo SKU</td></tr>
-        <tr><td>PP-2026-0011</td><td>En tránsito</td><td>2026-06-06</td><td>Cinturón + billetera, Interrapidisimo</td></tr>
-        <tr><td>PP-2026-0012</td><td>Cancelado por cliente</td><td>—</td><td>Bolso + pañuelo</td></tr>
-        <tr><td><strong>PP-2026-9999</strong></td><td><em>(inexistente)</em></td><td>—</td><td>Test anti-enumeration R-ID-2</td></tr>
+        <tr><td><code>PP-2026-0001</code></td><td>En tránsito</td><td>2026-06-05</td><td>2 items, TCC</td></tr>
+        <tr><td><code>PP-2026-0002</code></td><td>Entregado</td><td>—</td><td>1 item, Servientrega</td></tr>
+        <tr><td><code>PP-2026-0003</code></td><td>Procesando</td><td>2026-06-10</td><td>3 items, sin carrier</td></tr>
+        <tr><td><code>PP-2026-0004</code></td><td>Cancelado</td><td>—</td><td>1 item</td></tr>
+        <tr><td><code>PP-2026-0005</code></td><td>Preparando en bodega</td><td>2026-06-08</td><td>Vestido + 2 blusas</td></tr>
+        <tr><td><code>PP-2026-0006</code></td><td>En reparto (hoy)</td><td>2026-06-04</td><td>Chaqueta, Coordinadora</td></tr>
+        <tr><td><code>PP-2026-0007</code></td><td>En proceso de devolución</td><td>—</td><td>Falda, Envia</td></tr>
+        <tr><td><code>PP-2026-0008</code></td><td>En tránsito</td><td>2026-06-07</td><td>5 items (max), TCC</td></tr>
+        <tr><td><code>PP-2026-0009</code></td><td>Entregado</td><td>—</td><td>Abrigo premium</td></tr>
+        <tr><td><code>PP-2026-0010</code></td><td>Procesando</td><td>2026-06-09</td><td>5 camisas del mismo SKU</td></tr>
+        <tr><td><code>PP-2026-0011</code></td><td>En tránsito</td><td>2026-06-06</td><td>Cinturón + billetera, Interrapidisimo</td></tr>
+        <tr><td><code>PP-2026-0012</code></td><td>Cancelado por cliente</td><td>—</td><td>Bolso + pañuelo</td></tr>
+        <tr><td><code><strong>PP-2026-9999</strong></code></td><td><em>(inexistente)</em></td><td>—</td><td>Test anti-enumeration R-ID-2</td></tr>
       </tbody>
     </table>
+
+    <h2>Productos disponibles (modo mock)</h2>
+    <table class="demo-table">
+      <thead>
+        <tr><th>SKU</th><th>Nombre</th><th>Categoría</th><th>Target</th><th>Precio</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>PP-CAM-LIN-002</code></td><td>Camisa Lino Manga Larga</td><td>camisa</td><td>hombre</td><td>$ 89.900</td></tr>
+        <tr><td><code>PP-CAM-ALG-004</code></td><td>Camiseta Algodón Premium</td><td>camiseta</td><td>unisex</td><td>$ 49.900</td></tr>
+        <tr><td><code>PP-JEA-SLI-012</code></td><td>Jean Slim Fit Hombre</td><td>jean</td><td>hombre</td><td>$ 129.900</td></tr>
+        <tr><td><code>PP-BUZ-JEAN-001</code></td><td>Buzo Jean Clásico</td><td>buzo</td><td>hombre</td><td>$ 99.900</td></tr>
+        <tr><td><code>PP-VES-ELE-008</code></td><td>Vestido Elegante Negro</td><td>vestido</td><td>mujer</td><td>$ 189.900</td></tr>
+        <tr><td><code>PP-BLU-SED-009</code></td><td>Blusa Seda Estampada</td><td>blusa</td><td>mujer</td><td>$ 79.900</td></tr>
+        <tr><td><code>PP-CHA-PLU-010</code></td><td>Chaqueta Plumífero Hombre</td><td>chaqueta</td><td>hombre</td><td>$ 259.900</td></tr>
+        <tr><td><code>PP-FAL-LAR-011</code></td><td>Falda Larga Floral</td><td>falda</td><td>mujer</td><td>$ 119.900</td></tr>
+        <tr><td><code>PP-CAM-POL-007</code></td><td>Polo Clásica Hombre</td><td>polo</td><td>hombre</td><td>$ 59.900</td></tr>
+        <tr><td><code>PP-PAN-DEP-003</code></td><td>Pantalón Deportivo Mujer</td><td>pantalón</td><td>mujer</td><td>$ 89.900</td></tr>
+        <tr><td><code>PP-ZAP-CUE-005</code></td><td>Zapatos Cuero Negro Hombre</td><td>zapatos</td><td>hombre</td><td>$ 189.900</td></tr>
+        <tr><td><code>PP-TEN-DEP-013</code></td><td>Tenis Deportivos Unisex</td><td>tenis</td><td>unisex</td><td>$ 159.900</td></tr>
+        <tr><td><code>PP-ABR-LAN-016</code></td><td>Abrigo Lana Premium Mujer</td><td>abrigo</td><td>mujer</td><td>$ 459.900</td></tr>
+        <tr><td><code>PP-BOL-MUJ-019</code></td><td>Bolso Hobo Mujer</td><td>bolso</td><td>mujer</td><td>$ 129.900</td></tr>
+        <tr><td><code>PP-CIN-CUE-017</code></td><td>Cinturón Cuero Marrón</td><td>cinturón</td><td>hombre</td><td>$ 69.900</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Queries de ejemplo (product search)</h2>
+    <div class="queries">
+      <code>busco jeans</code>
+      <code>tienen camisas para hombre?</code>
+      <code>quiero un vestido elegante</code>
+      <code>chaqueta para frío</code>
+      <code>tenis deportivos blancos</code>
+      <code>bolso para mujer</code>
+      <code>zapatos de cuero</code>
+      <code>falda floral</code>
+      <code>abrigo premium mujer</code>
+      <code>cinturón marrón</code>
+    </div>
   </div>
 
   <script src="widget.js"></script>
